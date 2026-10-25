@@ -1,0 +1,17 @@
+# Works as is locally (`docker compose up --build`) or in Coolify ("Docker Compose" build pack).
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_PSEUDO: ${ADMIN_PSEUDO:-admin}
+    ports:
+      - "3000:3000"
+    volumes:
+      - bouffe-data:/data
+
+volumes:
+  bouffe-data:

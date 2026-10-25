@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import RecipeBrowser from '../../components/RecipeBrowser.svelte';
+import MembersOnly from '../../components/MembersOnly.astro';
+import { publicCache, sectionAccess, serverApi } from '../../lib/api';
+import type { RecipeList } from '../../lib/types';
+
+const q = Astro.url.searchParams.get('q') ?? '';
+const tag = Astro.url.searchParams.get('tag');
+const params = new URLSearchParams({ limit: '24' });
+if (q) params.set('q', q);
+if (tag) params.set('tag', tag);
+
+const access = await sectionAccess(Astro, 'recipes');
+const data = await Promise.all([
+  serverApi<RecipeList>(`/recipes?${params}`, access),
+  serverApi<{ tag: string; count: number }[]>('/tags?kind=recipe', access),
+]).catch((e) => {
+  if (access.locked(e)) return null;
+  throw e;
+});
+publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=30, stale-while-revalidate=300');
+---
+
+<Base mode="recipes" title="Recettes" description="Nos recettes maison.">
+  {
+    data ? (
+      <main>
+        <h1>Recettes maison</h1>
+        <RecipeBrowser client:load initial={data[0] ?? { items: [], total: 0, limit: 24, offset: 0 }} tags={data[1] ?? []} initialTag={tag} />
+      </main>
+    ) : (
+      <MembersOnly label="Le livre de recettes" />
+    )
+  }
+</Base>
+
+<style>
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--header-h) + env(safe-area-inset-top) + 24px) 16px 48px;
+  }
+  h1 {
+    margin: 0 0 16px;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+  }
+</style>

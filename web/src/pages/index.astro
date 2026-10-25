@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import MapView from '../components/MapView.svelte';
+import MembersOnly from '../components/MembersOnly.astro';
+import { publicCache, sectionAccess, serverApi } from '../lib/api';
+import type { Category } from '../lib/types';
+
+const access = await sectionAccess(Astro, 'map');
+const data = await Promise.all([
+  serverApi<{ features: any[] }>('/places/geojson', access),
+  serverApi<Category[]>('/categories'),
+]).catch((e) => {
+  if (access.locked(e)) return null;
+  throw e;
+});
+publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=30, stale-while-revalidate=300');
+---
+
+<Base mode="map" bodyClass={data ? 'map-page' : undefined}>
+  {
+    data ? (
+      <>
+        <link slot="head" rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+        <MapView client:only="svelte" features={data[0]?.features ?? []} categories={data[1] ?? []} />
+        <noscript><p style="padding: 100px 20px">La carte nécessite JavaScript.</p></noscript>
+      </>
+    ) : (
+      <MembersOnly label="La carte des adresses" />
+    )
+  }
+</Base>
+
+<style is:global>
+  body.map-page {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+</style>

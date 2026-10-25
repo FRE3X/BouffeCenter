@@ -1,0 +1,253 @@
+{
+  "categories": [],
+  "places": [
+    {
+      "match": "mollard",
+      "name": "Brasserie Mollard",
+      "category": "bistrot",
+      "address": "115 rue Saint-Lazare, 75008 Paris",
+      "city": "Paris",
+      "lat": 48.8753206,
+      "lng": 2.3259298,
+      "price_level": 3,
+      "tags": [
+        "art nouveau",
+        "fruits de mer",
+        "historique"
+      ],
+      "description": "Brasserie ouverte en 1895 face à la gare Saint-Lazare. Son décor Art nouveau de céramiques et de mosaïques est classé : on y va autant pour la salle que pour le plateau de fruits de mer.",
+      "website": "https://www.mollard.fr",
+      "images": [
+        {
+          "file": "mollard-salle.jpg",
+          "alt": "La salle et sa verrière",
+          "credit": "Tangopaso · domaine public (Wikimedia Commons)"
+        },
+        {
+          "file": "mollard-verriere.jpg",
+          "alt": "La verrière Art nouveau",
+          "credit": "Arthur Weidmann · CC BY-SA 4.0 (Wikimedia Commons)"
+        }
+      ]
+    },
+    {
+      "match": "coupole",
+      "name": "La Coupole",
+      "category": "bistrot",
+      "address": "102 boulevard du Montparnasse, 75014 Paris",
+      "city": "Paris",
+      "lat": 48.8422778,
+      "lng": 2.3280902,
+      "price_level": 3,
+      "tags": [
+        "art déco",
+        "historique",
+        "montparnasse"
+      ],
+      "description": "Grande brasserie Art déco de Montparnasse, inaugurée en 1927. Piliers peints, coupole centrale et service en continu ; le curry d'agneau est la spécialité de la maison depuis l'ouverture.",
+      "website": "https://www.lacoupole-paris.com",
+      "images": [
+        {
+          "file": "coupole-facade.jpg",
+          "alt": "La façade sur le boulevard du Montparnasse",
+          "credit": "LPLT · CC BY-SA 3.0 (Wikimedia Commons)"
+        },
+        {
+          "file": "coupole-enseigne.jpg",
+          "alt": "L'enseigne lumineuse le soir",
+          "credit": "Tomoyoshi Noguchi · CC BY 2.0 (Wikimedia Commons)"
+        }
+      ]
+    },
+    {
+      "match": "lipp",
+      "name": "Brasserie Lipp",
+      "category": "bistrot",
+      "address": "151 boulevard Saint-Germain, 75006 Paris",
+      "city": "Paris",
+      "lat": 48.8537528,
+      "lng": 2.3324105,
+      "price_level": 3,
+      "tags": [
+        "alsacienne",
+        "historique",
+        "saint-germain"
+      ],
+      "description": "Institution de Saint-Germain-des-Prés depuis 1880 : cuisine d'inspiration alsacienne (choucroute, cervelas rémoulade) et décor 1900 de céramiques et de miroirs.",
+      "website": "https://www.brasserielipp.fr",
+      "images": [
+        {
+          "file": "lipp-facade.jpg",
+          "alt": "La façade sur le boulevard Saint-Germain",
+          "credit": "Daniel Cruz Valle · CC BY 2.0 (Wikimedia Commons)"
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "title": "Bœuf bourguignon",
+      "description": "Le grand classique mijoté de Bourgogne : bœuf fondant, sauce au vin rouge, lardons, champignons et petits oignons glacés.",
+      "category": null,
+      "tags": [
+        "plat",
+        "mijoté",
+        "bourgogne",
+        "classique"
+      ],
+      "ingredients": [
+        {
+          "qty": "1,5 kg",
+          "name": "bœuf à braiser (paleron, joue, macreuse)"
+        },
+        {
+          "qty": "75 cl",
+          "name": "vin rouge de Bourgogne"
+        },
+        {
+          "qty": "25 cl",
+          "name": "bouillon de bœuf"
+        },
+        {
+          "qty": "200 g",
+          "name": "lardons fumés"
+        },
+        {
+          "qty": "250 g",
+          "name": "champignons de Paris"
+        },
+        {
+          "qty": "12",
+          "name": "petits oignons grelots"
+        },
+        {
+          "qty": "3",
+          "name": "carottes"
+        },
+        {
+          "qty": "1",
+          "name": "oignon"
+        },
+        {
+          "qty": "2 gousses",
+          "name": "ail"
+        },
+        {
+          "qty": "1",
+          "name": "bouquet garni (thym, laurier, persil)"
+        },
+        {
+          "qty": "2 c. à s.",
+          "name": "farine"
+        },
+        {
+          "qty": "30 g",
+          "name": "beurre"
+        },
+        {
+          "qty": "2 c. à s.",
+          "name": "huile"
+        },
+        {
+          "qty": "",
+          "name": "sel, poivre"
+        }
+      ],
+      "body": "## La veille (facultatif)\n\nCoupez la viande en gros cubes d'environ 5 cm et faites-la mariner une nuit au frais avec le vin, l'oignon émincé, les carottes en rondelles, l'ail écrasé et le bouquet garni.\n\n## Préparation\n\n1. Égouttez la viande en gardant la marinade, puis séchez-la bien avec du papier absorbant.\n2. Dans une cocotte en fonte, faites dorer les cubes de bœuf en plusieurs fois dans l'huile très chaude. Réservez.\n3. Faites revenir l'oignon et les carottes 5 minutes, remettez la viande, saupoudrez de farine et mélangez 2 minutes pour la torréfier.\n4. Versez le vin de la marinade (ou le vin seul) et le bouillon : la viande doit être juste couverte. Ajoutez l'ail et le bouquet garni, salez et poivrez.\n5. Portez à frémissement, couvrez et laissez mijoter **3 heures** à feu très doux, ou au four à 150 °C.\n\n## La garniture\n\n1. Faites rissoler les lardons à sec, puis réservez-les.\n2. Dans le même poêlon, faites glacer les oignons grelots avec le beurre, une pincée de sucre et un fond d'eau jusqu'à ce qu'ils soient tendres et brillants.\n3. Faites sauter les champignons coupés en quartiers à feu vif.\n4. Ajoutez lardons, oignons et champignons dans la cocotte 30 minutes avant la fin de la cuisson.\n\n> Astuce : le bourguignon est encore meilleur réchauffé le lendemain. Servez-le avec des pommes de terre vapeur, des tagliatelles fraîches… ou la purée Robuchon."
+    },
+    {
+      "title": "Purée façon Joël Robuchon",
+      "description": "La purée la plus célèbre de France : très beurrée, lisse et soyeuse, montée au beurre froid puis détendue au lait.",
+      "category": null,
+      "tags": [
+        "accompagnement",
+        "classique",
+        "robuchon"
+      ],
+      "ingredients": [
+        {
+          "qty": "1 kg",
+          "name": "pommes de terre ratte (ou BF15), de taille égale"
+        },
+        {
+          "qty": "250 g",
+          "name": "beurre doux très froid, coupé en dés"
+        },
+        {
+          "qty": "20 à 30 cl",
+          "name": "lait entier"
+        },
+        {
+          "qty": "",
+          "name": "gros sel, sel fin"
+        }
+      ],
+      "body": "## Préparation\n\n1. Lavez les pommes de terre **sans les éplucher**. Mettez-les dans une casserole d'eau froide salée (10 g de gros sel par litre), à hauteur, et portez à frémissement.\n2. Laissez cuire 25 à 30 minutes : la pointe d'un couteau doit s'enfoncer sans résistance.\n3. Égouttez, puis épluchez les pommes de terre encore chaudes.\n4. Passez-les au moulin à légumes, grille la plus fine, directement dans la casserole. Ne les mixez jamais : la purée deviendrait élastique.\n5. Faites dessécher la pulpe à feu doux 4 à 5 minutes en la retournant avec une spatule.\n6. Hors du feu, incorporez le beurre **froid** petit à petit en travaillant vigoureusement : la purée devient lisse et onctueuse.\n7. Faites bouillir le lait et versez-le en filet sans cesser de mélanger, jusqu'à la consistance souhaitée.\n8. Pour une texture parfaitement soyeuse, passez la purée au tamis fin. Rectifiez le sel.\n\n> Astuce : gardez-la au chaud au bain-marie, couverte d'un film au contact, et redonnez un coup de spatule avec un peu de lait chaud juste avant de servir."
+    },
+    {
+      "title": "Moelleux au chocolat",
+      "description": "Un gâteau au chocolat noir au cœur fondant, prêt en 25 minutes. À servir tiède.",
+      "category": "dessert",
+      "tags": [
+        "chocolat",
+        "dessert",
+        "rapide"
+      ],
+      "ingredients": [
+        {
+          "qty": "200 g",
+          "name": "chocolat noir pâtissier (60 à 70 %)"
+        },
+        {
+          "qty": "150 g",
+          "name": "beurre doux"
+        },
+        {
+          "qty": "150 g",
+          "name": "sucre"
+        },
+        {
+          "qty": "4",
+          "name": "œufs"
+        },
+        {
+          "qty": "50 g",
+          "name": "farine"
+        },
+        {
+          "qty": "1 pincée",
+          "name": "fleur de sel"
+        }
+      ],
+      "body": "## Préparation\n\n1. Préchauffez le four à **180 °C**. Beurrez et farinez un moule de 22 cm (ou 6 ramequins).\n2. Faites fondre le chocolat et le beurre ensemble au bain-marie ou à feu très doux, puis laissez tiédir.\n3. Fouettez les œufs avec le sucre jusqu'à ce que le mélange blanchisse.\n4. Versez le chocolat fondu sur les œufs, mélangez, puis ajoutez la farine tamisée et la fleur de sel.\n5. Versez dans le moule et enfournez **20 à 22 minutes** (10 à 12 minutes pour des ramequins). Le centre doit rester tremblotant.\n6. Laissez reposer 10 minutes avant de démouler.\n\n> Astuce : servez tiède avec une boule de glace vanille ou une cuillère de crème fraîche épaisse."
+    }
+  ],
+  "recipeImages": {
+    "Bœuf bourguignon": [
+      {
+        "file": "boeuf-bourguignon-assiette.jpg",
+        "alt": "Bœuf bourguignon servi à l'assiette",
+        "credit": "Asamboi · CC BY-SA 4.0 (Wikimedia Commons)"
+      },
+      {
+        "file": "boeuf-bourguignon-cocotte.jpg",
+        "alt": "Bœuf bourguignon en cocotte",
+        "credit": "Arnaud 25 · CC BY-SA 4.0 (Wikimedia Commons)"
+      }
+    ],
+    "Purée façon Joël Robuchon": [
+      {
+        "file": "puree.jpg",
+        "alt": "Purée de pommes de terre",
+        "credit": "Renee Comet · domaine public (Wikimedia Commons)"
+      }
+    ],
+    "Moelleux au chocolat": [
+      {
+        "file": "moelleux-chocolat.jpg",
+        "alt": "Moelleux au chocolat",
+        "credit": "Popo le Chien · CC0 (Wikimedia Commons)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import { siteSettings } from '../lib/api';
+import type { Section } from '../lib/types';
+import type { Mode } from '../components/Header.astro';
+import playfair from '@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2?url';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  mode?: Mode;
+  bodyClass?: string;
+}
+const { title, description = 'Nos bonnes adresses notées et nos recettes maison.', image, mode = 'map', bodyClass } = Astro.props;
+const fullTitle = title ? `${title} · Bouffe Center` : 'Bouffe Center';
+// Private sections get a lock in the toggle (shown to visitors only).
+const settings = await siteSettings(Astro);
+const locked = (['map', 'recipes', 'planning', 'products', 'cellar'] as Section[]).filter((s) => settings?.[`${s}_private`]);
+// Optional sections disappear from the toggle when switched off (on by default).
+const hidden = (['products', 'cellar'] as const).filter((s) => settings && !settings[`${s}_enabled`]);
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#faf7f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161412" media="(prefers-color-scheme: dark)" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {image && <meta property="og:image" content={new URL(image, Astro.url).href} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      Member detection: the bc_member hint cookie decides before first paint. Without it (e.g. a session opened before
+      the hint existed), one /api/auth/me check per browser session confirms it and fires "bc:member".
+    -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        if (/(?:^|; )bc_member=1/.test(document.cookie)) return root.classList.add('member');
+        try {
+          if (sessionStorage.getItem('bc_member_checked')) return;
+        } catch (e) {}
+        fetch('/api/auth/me')
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+          })
+          .then(function (j) {
+            // Only remember a real answer: a network or server error is retried on the next page.
+            try {
+              sessionStorage.setItem('bc_member_checked', '1');
+            } catch (e) {}
+            if (!j.user) return;
+            root.classList.add('member');
+            window.dispatchEvent(new Event('bc:member'));
+          })
+          .catch(function () {});
+      })();
+    </script>
+    <link rel="preload" href={playfair} as="font" type="font/woff2" crossorigin />
+    <style
+      is:inline
+      set:html={`@font-face{font-family:'Playfair Display';font-style:normal;font-display:swap;font-weight:400 900;src:url(${playfair}) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`}
+    />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <Header mode={mode} locked={locked} hidden={hidden} />
+    <slot />
+  </body>
+</html>

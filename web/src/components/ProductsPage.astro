@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductBrowser from './ProductBrowser.svelte';
+import MembersOnly from './MembersOnly.astro';
+import type { ProductKind } from '../lib/types';
+import type { loadProductList } from '../lib/productPages';
+
+/** Shared by /produits (pantry) and /cave (wines); data comes from loadProductList(). */
+interface Props {
+  kind: ProductKind;
+  data: NonNullable<Awaited<ReturnType<typeof loadProductList>>>;
+}
+const { kind, data } = Astro.props;
+const section = kind === 'wine' ? 'cellar' : 'products';
+const title = kind === 'wine' ? 'Cave' : 'Produits';
+---
+
+<Base
+  mode={section}
+  title={title}
+  description={kind === 'wine' ? 'Nos vins, spiritueux et alcools.' : 'Les produits que nous recommandons.'}
+>
+  {
+    data.list ? (
+      <main>
+        <h1>{kind === 'wine' ? 'La cave' : 'Nos produits'}</h1>
+        <ProductBrowser
+          client:load
+          {kind}
+          initial={data.list}
+          tags={data.tags}
+          initialTag={data.tag}
+          grapeminds={data.grapeminds}
+        />
+      </main>
+    ) : (
+      <MembersOnly label={kind === 'wine' ? 'La cave' : 'La liste des produits'} />
+    )
+  }
+</Base>
+
+<style>
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--header-h) + env(safe-area-inset-top) + 24px) 16px 96px;
+  }
+  h1 {
+    margin: 0 0 16px;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+  }
+</style>

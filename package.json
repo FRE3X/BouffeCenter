@@ -1,0 +1,17 @@
+{
+  "name": "bouffe-center",
+  "private": true,
+  "description": "Share favourite places, home-made recipes and weekly menus with friends. Lightweight, API-first, self-hosted.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "node --run dev:server & node --run dev:web; wait",
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "start": "npm run start -w server",
+    "check": "npm run check -w server"
+  },
+  "engines": { "node": ">=24" }
+}

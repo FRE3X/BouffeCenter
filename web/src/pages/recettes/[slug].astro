@@ -1,0 +1,304 @@
+---
+import Base from '../../layouts/Base.astro';
+import Gallery from '../../components/Gallery.svelte';
+import MembersOnly from '../../components/MembersOnly.astro';
+import { publicCache, sectionAccess, serverApi } from '../../lib/api';
+import { renderMarkdown } from '../../lib/markdown';
+import { date } from '../../lib/format';
+import type { Recipe } from '../../lib/types';
+import { icon, iconBadge } from '../../lib/icons';
+import { productHref, productSubtitle } from '../../lib/products';
+
+const access = await sectionAccess(Astro, 'recipes');
+let locked = false;
+const recipe = await serverApi<Recipe>(`/recipes/${encodeURIComponent(Astro.params.slug!)}`, access).catch((e) => {
+  if (!access.locked(e)) throw e;
+  locked = true;
+  return null;
+});
+if (!locked && (!recipe || !recipe.published)) {
+  return Astro.rewrite('/404');
+}
+const html = recipe ? renderMarkdown(recipe.body) : '';
+const cover = recipe?.cover ?? null;
+const gallery = recipe?.photos.filter((p) => p.id !== cover?.id) ?? [];
+// Recommended products and wine pairings; members get an in-stock mark once the page knows them (script below).
+const pantry = recipe?.products.filter((p) => p.kind === 'pantry') ?? [];
+const wines = recipe?.products.filter((p) => p.kind === 'wine') ?? [];
+publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+---
+
+<Base mode="recipes" title={recipe?.title ?? 'Recette'} description={recipe?.description || undefined} image={cover?.lg}>
+  {!recipe ? <MembersOnly label="Cette recette" /> : (
+  <article>
+    {
+      cover && (
+        <div class="hero">
+          <img src={cover.lg} srcset={`${cover.sm} 480w, ${cover.lg} 1600w`} sizes="(max-width: 900px) 100vw, 900px" alt="" fetchpriority="high" />
+        </div>
+      )
+    }
+    <header>
+      <div class="top-links">
+        <a class="back" href="/recettes">← Toutes les recettes</a>
+        <a class="edit-link member-only" href={`/admin#/recettes/${recipe.id}`} data-astro-prefetch="false">
+          <Fragment set:html={icon('pencil', 14)} />Modifier
+        </a>
+      </div>
+      {recipe.category && <p class="category inline-icon"><Fragment set:html={iconBadge(recipe.category.icon, 24)} />{recipe.category.name}</p>}
+      <h1>{recipe.title}</h1>
+      {recipe.description && <p class="lead">{recipe.description}</p>}
+      <p class="meta">
+        {recipe.author && <span>par {recipe.author}</span>}
+        <span>{date(recipe.created_at)}</span>
+        {recipe.place && <a class="inline-icon" href={`/?lieu=${recipe.place.slug}`}><Fragment set:html={icon('map-pin', 15)} />Inspirée de {recipe.place.name}</a>}
+      </p>
+      {
+        recipe.tags.length > 0 && (
+          <div class="tags">
+            {recipe.tags.map((t) => (
+              <a class="tag" href={`/recettes?tag=${encodeURIComponent(t)}`}>
+                #{t}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="layout">
+      {
+        (recipe.ingredients.length > 0 || recipe.products.length > 0) && (
+          <aside class="ingredients" data-recipe={recipe.id}>
+            {recipe.ingredients.length > 0 && (
+              <>
+                <h2>Ingrédients</h2>
+                <ul>
+                  {recipe.ingredients.map((i) => (
+                    <li>
+                      <label>
+                        <input type="checkbox" />
+                        <span>
+                          {i.qty && <strong>{i.qty}</strong>} {i.name}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {[
+              { title: 'Produits conseillés', items: pantry },
+              { title: 'Accords mets-vins', items: wines },
+            ].map(
+              (group) =>
+                group.items.length > 0 && (
+                  <>
+                    <h3>{group.title}</h3>
+                    <ul class="products">
+                      {group.items.map((p) => (
+                        <li>
+                          <span class="stock" data-product={p.id} />
+                          <a href={productHref(p)}>
+                            {p.name}
+                            {productSubtitle(p) && <small> · {productSubtitle(p)}</small>}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ),
+            )}
+          </aside>
+        )
+      }
+      <div class="prose" set:html={html} />
+    </div>
+
+    {
+      gallery.length > 0 && (
+        <section>
+          <h2>Photos</h2>
+          <Gallery client:visible photos={gallery} />
+        </section>
+      )
+    }
+  </article>
+  )}
+</Base>
+
+<style>
+  article {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: calc(var(--header-h) + env(safe-area-inset-top) + 16px) 16px 64px;
+  }
+  .hero {
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  header {
+    margin: 24px 0 8px;
+  }
+  .top-links {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .category {
+    margin: 16px 0 4px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+  }
+  .lead {
+    font-size: 1.15rem;
+    color: var(--muted);
+    margin: 12px 0 0;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .meta a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    align-items: start;
+    margin-top: 24px;
+  }
+  .layout:not(:has(.ingredients)) {
+    grid-template-columns: 1fr;
+  }
+  .ingredients {
+    position: sticky;
+    top: calc(var(--header-h) + 16px);
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .ingredients h2 {
+    margin: 0 0 10px;
+    font-size: 1.3rem;
+  }
+  .ingredients ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .ingredients li {
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .ingredients li:last-child {
+    border: 0;
+  }
+  .ingredients label {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    cursor: pointer;
+  }
+  .ingredients label:has(input:checked) {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+  .ingredients input {
+    accent-color: var(--accent);
+  }
+  .ingredients h3 {
+    margin: 18px 0 6px;
+    font-size: 1.05rem;
+  }
+  .ingredients h2 + h3,
+  .ingredients > h3:first-child {
+    margin-top: 0;
+  }
+  .products li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .products a {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .products a:hover {
+    color: var(--accent);
+  }
+  .products small {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .stock:empty {
+    display: none;
+  }
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  section h2 {
+    margin-top: 48px;
+  }
+  @media (max-width: 760px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .ingredients {
+      position: static;
+    }
+    .hero {
+      margin: 0 -16px;
+      border-radius: 0;
+    }
+  }
+</style>
+
+<script>
+  import { stockBadge } from '../../lib/icons';
+  import { onMember } from '../../lib/member';
+
+  // Members only: mark each linked product as in stock (✓) or not (✗). The page itself stays publicly cached.
+  const aside = document.querySelector<HTMLElement>('aside[data-recipe]');
+  if (aside?.querySelector('[data-product]')) {
+    onMember(async () => {
+      const res = await fetch(`/api/recipes/${aside.dataset.recipe}`);
+      if (!res.ok) return;
+      const { products } = (await res.json()) as { products: { id: number; quantity?: number }[] };
+      for (const p of products) {
+        const slot = aside.querySelector<HTMLElement>(`[data-product="${p.id}"]`);
+        if (slot && p.quantity !== undefined) slot.innerHTML = stockBadge(p.quantity > 0);
+      }
+    });
+  }
+</script>

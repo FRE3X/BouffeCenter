@@ -1,0 +1,61 @@
+---
+import { icon } from '../lib/icons';
+
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+const next = Astro.url.pathname + Astro.url.search;
+---
+
+<!-- Shown instead of a private section to visitors who are not signed in. -->
+<main class="members-only">
+  <div class="card">
+    <span class="icon-badge" style="width:56px;height:56px"><Fragment set:html={icon('lock', 26)} /></span>
+    <h1>Section réservée aux membres</h1>
+    <p>{label} n'est visible que par les membres connectés.</p>
+    <a class="login" href={`/admin?next=${encodeURIComponent(next)}`} data-astro-prefetch="false">Se connecter</a>
+  </div>
+</main>
+
+<style>
+  .members-only {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: calc(var(--header-h) + env(safe-area-inset-top) + 24px) 16px 48px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 420px;
+    padding: 32px 24px;
+    text-align: center;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  h1 {
+    margin: 4px 0 0;
+    font-size: clamp(1.5rem, 5vw, 1.9rem);
+  }
+  p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .login {
+    margin-top: 8px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .login:hover {
+    filter: brightness(1.08);
+  }
+</style>

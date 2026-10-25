@@ -1,0 +1,9 @@
+---
+import ProductPage from '../../components/ProductPage.astro';
+import { loadProduct } from '../../lib/productPages';
+
+const data = await loadProduct(Astro, 'pantry', Astro.params.slug!);
+if (!data) return Astro.rewrite('/404');
+---
+
+<ProductPage kind="pantry" product={data.product} />

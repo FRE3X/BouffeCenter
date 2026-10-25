@@ -1,0 +1,210 @@
+---
+import { iconBadge } from '../lib/icons';
+import { MEALS, dayMonth, weekday } from '../lib/planning';
+import type { PlanningWeek } from '../lib/types';
+
+interface Props {
+  plan: PlanningWeek;
+}
+const { plan } = Astro.props;
+---
+
+<!--
+  One column per day on wide screens (rows aligned with subgrid), one card per day on phones.
+  Meal rows are hidden by the filter through `hide-<meal>` classes on .week.
+-->
+<div class="week" id="planning-week">
+  {
+    plan.days.map((day) => (
+      <section class:list={['day', { today: day.date === plan.today }]} id={day.date === plan.today ? 'aujourdhui' : undefined}>
+        <h2>
+          <span class="weekday">{weekday(day.date)}</span>
+          <span class="date">{dayMonth(day.date)}</span>
+        </h2>
+        {MEALS.map((meal) => (
+          <div class={`meal meal-${meal.key}`}>
+            <h3>{meal.label}</h3>
+            {day.meals[meal.key].length ? (
+              <ul class:list={{ multi: day.meals[meal.key].length > 1 }}>
+                {day.meals[meal.key].map((recipe) => (
+                  <li>
+                    <a href={`/recettes/${recipe.slug}`}>
+                      <span class="cover">
+                        {recipe.cover ? (
+                          <img src={recipe.cover.sm} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                          <Fragment set:html={iconBadge(recipe.category?.icon ?? 'cooking-pot', 40)} />
+                        )}
+                      </span>
+                      <span class="title">{recipe.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="empty" aria-label="Rien de prévu">—</p>
+            )}
+          </div>
+        ))}
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .week {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .day {
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    scroll-margin-top: calc(var(--header-h) + env(safe-area-inset-top) + 12px);
+  }
+  .day.today {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  h2 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 14px 8px;
+    font-size: 1.2rem;
+  }
+  .weekday {
+    text-transform: capitalize;
+  }
+  .date {
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .today h2 {
+    color: var(--accent);
+  }
+  .meal {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: start;
+    align-content: start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+  }
+  h3 {
+    margin: 4px 0 0;
+    font-family: var(--font);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Every recipe of a meal stays visible: they wrap onto new rows rather than scrolling sideways. */
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li a {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .cover {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+  }
+  li a:hover img {
+    transform: scale(1.04);
+  }
+  .title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .empty {
+    margin: 2px 0 0;
+    color: var(--line);
+    font-weight: 700;
+  }
+
+  .week.hide-breakfast .meal-breakfast,
+  .week.hide-lunch .meal-lunch,
+  .week.hide-dinner .meal-dinner {
+    display: none;
+  }
+
+  /* Wide screens: a real week grid, Monday → Sunday, meal rows aligned across days. */
+  @media (min-width: 960px) {
+    .week {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-rows: auto repeat(3, auto);
+      gap: 0 10px;
+    }
+    .day {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+    }
+    h2 {
+      flex-direction: column;
+      gap: 0;
+      font-size: 1.05rem;
+    }
+    .meal {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 8px 10px 10px;
+    }
+    ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    /* Several recipes in one meal: compact rows (thumbnail + title) so the column stays short. */
+    ul.multi {
+      gap: 8px;
+    }
+    .multi a {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+    .multi .cover {
+      flex: none;
+      width: 56px;
+      border-radius: 8px;
+    }
+    .multi .cover :global(.icon-badge) {
+      transform: scale(0.6);
+    }
+    .multi .title {
+      font-size: 0.8rem;
+    }
+  }
+</style>

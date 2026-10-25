@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import AdminApp from '../admin/AdminApp.svelte';
+import '../admin/admin.css';
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<Base mode="admin" title="Admin">
+  <meta slot="head" name="robots" content="noindex" />
+  <AdminApp client:only="svelte" />
+</Base>
