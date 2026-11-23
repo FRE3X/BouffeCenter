@@ -193,11 +193,12 @@
       top: auto;
       left: 0;
       right: 0;
-      bottom: var(--tabbar-h);
+      /* Runs to the bottom edge under the glass tab bar; its content stops above the bar. */
+      bottom: 0;
       width: auto;
       max-height: 62dvh;
       border-radius: 20px 20px 0 0;
-      padding-bottom: max(0px, env(safe-area-inset-bottom) - var(--tabbar-h));
+      padding-bottom: max(env(safe-area-inset-bottom), var(--tabbar-h));
       animation-name: slide-up;
     }
     @keyframes slide-up {

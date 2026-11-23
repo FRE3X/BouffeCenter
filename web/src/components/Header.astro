@@ -84,7 +84,7 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
   mode !== 'admin' && (
     <nav class="tabbar" aria-label="Sections">
       {links.map((l) => (
-        <a href={l.href} class:list={{ active: mode === l.mode, private: locked.includes(l.mode) }} aria-current={mode === l.mode ? 'page' : undefined}>
+        <a href={l.href} class:list={{ active: mode === l.mode, private: locked.includes(l.mode) }} aria-current={mode === l.mode ? 'page' : undefined} data-astro-prefetch="viewport">
           <span class="tab-icon"><Fragment set:html={icon(l.icon, 20)} /></span>
           <span class="tab-label">{l.label}</span>
         </a>
@@ -258,6 +258,7 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     transition: color 0.2s;
   }
   .pill {
+    view-transition-name: toggle-pill;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -327,17 +328,35 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     .toggle {
       display: none;
     }
+    /* Floating "liquid glass" capsule: the page shows through, heavily blurred so it never competes with the labels. */
     .tabbar {
       position: fixed;
       z-index: 50;
-      inset: auto 0 0 0;
+      left: max(12px, env(safe-area-inset-left));
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
       display: flex;
-      height: var(--tabbar-h);
-      padding: 6px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
-      /* Solid, unlike the floating pills: page text scrolling underneath must not show through the labels. */
-      background: var(--surface);
-      border-top: 1px solid var(--glass-border);
-      box-shadow: 0 -4px 20px rgb(31 27 22 / 0.08);
+      height: 64px;
+      padding: 6px;
+      border-radius: 32px;
+      background: color-mix(in srgb, var(--surface) 60%, transparent);
+      backdrop-filter: blur(24px) saturate(1.9);
+      -webkit-backdrop-filter: blur(24px) saturate(1.9);
+      border: 1px solid rgb(255 255 255 / 0.6);
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.7),
+        inset 0 -1px 0 rgb(31 27 22 / 0.04),
+        0 10px 30px rgb(31 27 22 / 0.18);
+      view-transition-name: tabbar;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tabbar {
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        border-color: rgb(255 255 255 / 0.12);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.1),
+          0 10px 30px rgb(0 0 0 / 0.5);
+      }
     }
     .tabbar a {
       flex: 1 1 0;
@@ -376,6 +395,9 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     .tabbar a.active .tab-icon {
       background: var(--accent);
       color: var(--accent-ink);
+      box-shadow: 0 4px 12px rgb(209 56 47 / 0.35);
+      /* Morphs from the old tab to the new one during the page transition. */
+      view-transition-name: tab-active;
     }
     .search {
       width: 44px;
@@ -447,8 +469,9 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     }
   }
 
-  // Bottom tab bar: highlight the tapped tab right away.
-  document.querySelectorAll<HTMLAnchorElement>('.tabbar a').forEach((link) => {
+  // Bottom tab bar: highlight the tapped tab right away, unless the browser animates the switch between pages
+  // (cross-document view transitions), which slides the red pill to the new tab by itself.
+  if (!('onpageswap' in window)) document.querySelectorAll<HTMLAnchorElement>('.tabbar a').forEach((link) => {
     link.addEventListener('click', () => {
       document.querySelector('.tabbar a.active')?.classList.remove('active');
       link.classList.add('active');

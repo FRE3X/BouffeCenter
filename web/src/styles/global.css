@@ -41,10 +41,31 @@
 
 @media (max-width: 640px) {
   :root:has(.tabbar) {
-    --tabbar-h: calc(60px + env(safe-area-inset-bottom));
+    /* Floating bar: 64px + its gap to the screen edge. */
+    --tabbar-h: calc(64px + max(12px, env(safe-area-inset-bottom)));
   }
   body:has(.tabbar) {
     padding-bottom: var(--tabbar-h);
+  }
+}
+
+/*
+  Smooth page changes without a client router: the browser cross-fades the page while the header and the
+  phone tab bar stay put, and the active tab's red pill slides to its new place.
+*/
+@view-transition {
+  navigation: auto;
+}
+.site-header {
+  view-transition-name: site-header;
+}
+::view-transition-group(*) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
   }
 }
 

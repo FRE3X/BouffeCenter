@@ -264,11 +264,12 @@
     .sheet {
       left: 0;
       right: 0;
-      bottom: var(--tabbar-h);
+      /* Slides over the floating tab bar, which would otherwise cover its buttons. */
+      z-index: 55;
+      bottom: 0;
       width: auto;
-      max-height: calc(100dvh - var(--header-h) - var(--tabbar-h) - 24px);
       border-radius: 20px 20px 0 0;
-      padding-bottom: calc(18px + max(0px, env(safe-area-inset-bottom) - var(--tabbar-h)));
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
     }
   }
   header {
