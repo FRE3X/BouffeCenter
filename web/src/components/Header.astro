@@ -85,8 +85,10 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     <nav class="tabbar" aria-label="Sections">
       {links.map((l) => (
         <a href={l.href} class:list={{ active: mode === l.mode, private: locked.includes(l.mode) }} aria-current={mode === l.mode ? 'page' : undefined} data-astro-prefetch="viewport">
-          <span class="tab-icon"><Fragment set:html={icon(l.icon, 20)} /></span>
-          <span class="tab-label">{l.label}</span>
+          <span class="tab-pill">
+            <Fragment set:html={icon(l.icon, 22)} />
+            <span class="tab-label">{l.label}</span>
+          </span>
         </a>
       ))}
     </nav>
@@ -336,9 +338,9 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
       right: max(12px, env(safe-area-inset-right));
       bottom: max(12px, env(safe-area-inset-bottom));
       display: flex;
-      height: 64px;
-      padding: 6px;
-      border-radius: 32px;
+      height: 58px;
+      padding: 7px;
+      border-radius: 29px;
       background: color-mix(in srgb, var(--surface) 60%, transparent);
       backdrop-filter: blur(24px) saturate(1.9);
       -webkit-backdrop-filter: blur(24px) saturate(1.9);
@@ -358,45 +360,54 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
           0 10px 30px rgb(0 0 0 / 0.5);
       }
     }
+    /* Icons only; the active tab's red pill widens to show its name (the others keep theirs for screen readers). */
     .tabbar a {
-      flex: 1 1 0;
+      flex: 1 1 auto;
       min-width: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 2px;
+      justify-content: center;
       color: var(--muted);
       text-decoration: none;
     }
-    .tab-icon {
-      display: grid;
-      place-items: center;
-      width: 52px;
-      height: 30px;
+    .tab-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 44px;
+      padding: 0 13px;
       border-radius: 999px;
       transition:
         background-color 0.2s,
         color 0.2s;
     }
+    .tab-pill :global(svg) {
+      flex: none;
+    }
     .tab-label {
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
       font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 0.74rem;
-      line-height: 1.2;
+      font-weight: 700;
+      font-size: 0.92rem;
+      line-height: 1;
     }
-    /* Active tab: white icon on the red pill (house style), label in ink. */
+    .tabbar a:not(.active) .tab-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    /* Active tab: white icon and name on the red pill (house style). */
     .tabbar a.active {
-      color: var(--ink);
+      flex-grow: 0;
     }
-    .tabbar a.active .tab-icon {
+    .tabbar a.active .tab-pill {
+      padding: 0 16px 0 14px;
       background: var(--accent);
       color: var(--accent-ink);
       box-shadow: 0 4px 12px rgb(209 56 47 / 0.35);
-      /* Morphs from the old tab to the new one during the page transition. */
+      /* Morphs (moves and widens) from the old tab to the new one during the page transition. */
       view-transition-name: tab-active;
     }
     .search {

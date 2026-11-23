@@ -41,8 +41,8 @@
 
 @media (max-width: 640px) {
   :root:has(.tabbar) {
-    /* Floating bar: 64px + its gap to the screen edge. */
-    --tabbar-h: calc(64px + max(12px, env(safe-area-inset-bottom)));
+    /* Floating bar: 58px + its gap to the screen edge. */
+    --tabbar-h: calc(58px + max(12px, env(safe-area-inset-bottom)));
   }
   body:has(.tabbar) {
     padding-bottom: var(--tabbar-h);
