@@ -15,7 +15,7 @@ interface Props {
 }
 const { title, description = 'Nos bonnes adresses notées et nos recettes maison.', image, mode = 'map', bodyClass } = Astro.props;
 const fullTitle = title ? `${title} · Bouffe Center` : 'Bouffe Center';
-// Private sections get a lock in the toggle (shown to visitors only).
+// Private sections are left out of the toggle for visitors.
 const settings = await siteSettings(Astro);
 const locked = (['map', 'recipes', 'planning', 'products', 'cellar'] as Section[]).filter((s) => settings?.[`${s}_private`]);
 // Optional sections disappear from the toggle when switched off (on by default).

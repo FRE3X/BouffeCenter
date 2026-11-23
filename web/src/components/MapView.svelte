@@ -10,6 +10,9 @@
   import { iconBadge, triedBadge } from '../lib/icons';
   import PlacePanel from './PlacePanel.svelte';
 
+  // The phone tab bar covers the bottom of the map: keep fitted places and the selected one above it.
+  const tabbarHeight = () => document.querySelector<HTMLElement>('.tabbar')?.offsetHeight ?? 0;
+
   type Props = {
     id: number;
     slug: string;
@@ -109,7 +112,7 @@
     if (!map || !list.length) return;
     const bounds = new maplibregl.LngLatBounds();
     list.forEach((f) => bounds.extend(f.geometry.coordinates));
-    map.fitBounds(bounds, { padding: { top: 120, bottom: 80, left: 60, right: 90 }, maxZoom: 15, duration: 600 });
+    map.fitBounds(bounds, { padding: { top: 120, bottom: 80 + tabbarHeight(), left: 60, right: 90 }, maxZoom: 15, duration: 600 });
   }
 
   // Every published category appears in the rail, even before it has places.
@@ -206,7 +209,7 @@
       map.flyTo({
         center: f.geometry.coordinates,
         zoom: Math.max(map.getZoom(), 15),
-        padding: mobile ? { bottom: innerHeight * 0.55, top: 0, left: 0, right: 0 } : { left: 420, top: 0, bottom: 0, right: 0 },
+        padding: mobile ? { bottom: innerHeight * 0.55 + tabbarHeight(), top: 0, left: 0, right: 0 } : { left: 420, top: 0, bottom: 0, right: 0 },
         essential: true,
       });
     }
@@ -271,7 +274,7 @@
       center: [2.3488, 48.8534],
       zoom: 11,
       attributionControl: { compact: true },
-      ...(features.length ? { bounds, fitBoundsOptions: { padding: { top: 120, bottom: 70, left: 70, right: 90 }, maxZoom: 14 } } : {}),
+      ...(features.length ? { bounds, fitBoundsOptions: { padding: { top: 120, bottom: 70 + tabbarHeight(), left: 70, right: 90 }, maxZoom: 14 } } : {}),
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
     map.addControl(
@@ -532,7 +535,7 @@
     position: fixed;
     z-index: 80;
     left: 50%;
-    bottom: calc(28px + env(safe-area-inset-bottom));
+    bottom: max(28px + env(safe-area-inset-bottom), 16px + var(--tabbar-h));
     transform: translateX(-50%);
     padding: 10px 18px;
     border-radius: 999px;
@@ -823,7 +826,50 @@
     line-height: 1;
     letter-spacing: -0.03em;
   }
-    :global(.maplibregl-ctrl-bottom-right) {
-    margin-bottom: env(safe-area-inset-bottom);
+  :global(.maplibregl-ctrl-bottom-right),
+  :global(.maplibregl-ctrl-bottom-left) {
+    margin-bottom: max(env(safe-area-inset-bottom), var(--tabbar-h));
+  }
+
+  /* Map controls in the house style (frosted glass), readable in light and dark mode. */
+  :global(.maplibregl-map .maplibregl-ctrl-group) {
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--glass);
+    backdrop-filter: saturate(1.8) blur(16px);
+    -webkit-backdrop-filter: saturate(1.8) blur(16px);
+    border: 1px solid var(--glass-border);
+  }
+  :global(.maplibregl-map .maplibregl-ctrl-group:not(:empty)) {
+    box-shadow: 0 4px 20px rgb(31 27 22 / 0.12);
+  }
+  :global(.maplibregl-map .maplibregl-ctrl-group button) {
+    width: 38px;
+    height: 38px;
+  }
+  :global(.maplibregl-map .maplibregl-ctrl-group button + button) {
+    border-top: 1px solid var(--glass-border);
+  }
+  :global(.maplibregl-map .maplibregl-ctrl button:not(:disabled):hover),
+  :global(.maplibregl-map .maplibregl-ctrl button:not(:disabled):active) {
+    background-color: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  :global(.maplibregl-map .maplibregl-ctrl-attrib.maplibregl-compact) {
+    background: var(--glass);
+    color: var(--muted);
+    border: 1px solid var(--glass-border);
+  }
+  :global(.maplibregl-map .maplibregl-ctrl-attrib a) {
+    color: var(--muted);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(.maplibregl-map .maplibregl-ctrl-group:not(:empty)) {
+      box-shadow: 0 4px 20px rgb(0 0 0 / 0.4);
+    }
+    /* MapLibre draws its icons dark: invert them, and turn the hue back so the geolocation blue stays blue. */
+    :global(.maplibregl-map .maplibregl-ctrl-icon),
+    :global(.maplibregl-map .maplibregl-ctrl-attrib-button) {
+      filter: invert(1) hue-rotate(180deg);
+    }
   }
 </style>

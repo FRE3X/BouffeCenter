@@ -13,6 +13,8 @@
   --shadow: 0 1px 2px rgb(31 27 22 / 0.06), 0 6px 24px rgb(31 27 22 / 0.08);
   --radius: 14px;
   --header-h: 68px;
+  /* Height of the phone tab bar (Header.astro), 0 where there is none. Fixed elements at the bottom sit above it. */
+  --tabbar-h: 0px;
   --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Playfair Display', 'Iowan Old Style', Georgia, serif;
   --glass: color-mix(in srgb, var(--surface) 72%, transparent);
@@ -34,6 +36,15 @@
     --meh: #ff6b6b;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 24px rgb(0 0 0 / 0.35);
     color-scheme: dark;
+  }
+}
+
+@media (max-width: 640px) {
+  :root:has(.tabbar) {
+    --tabbar-h: calc(60px + env(safe-area-inset-bottom));
+  }
+  body:has(.tabbar) {
+    padding-bottom: var(--tabbar-h);
   }
 }
 

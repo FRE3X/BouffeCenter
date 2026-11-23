@@ -193,11 +193,11 @@
       top: auto;
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: var(--tabbar-h);
       width: auto;
       max-height: 62dvh;
       border-radius: 20px 20px 0 0;
-      padding-bottom: env(safe-area-inset-bottom);
+      padding-bottom: max(0px, env(safe-area-inset-bottom) - var(--tabbar-h));
       animation-name: slide-up;
     }
     @keyframes slide-up {

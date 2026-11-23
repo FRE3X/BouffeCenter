@@ -1,7 +1,7 @@
 import {
-  Apple, Beef, Beer, BookOpen, Check, CircleCheck, Pencil, CakeSlice, Camera, Candy, Carrot, ChefHat, Cherry, ChevronLeft, ChevronRight, Citrus,
+  Apple, Beef, Beer, BookOpen, CalendarDays, Check, CircleCheck, Pencil, CakeSlice, Camera, Candy, Carrot, ChefHat, Cherry, ChevronLeft, ChevronRight, Citrus,
   Coffee, Cookie, CookingPot, Croissant, CupSoda, Dessert, Donut, Drumstick, EggFried, Fish, Flame, Grape, Ham,
-  Hamburger, IceCreamCone, Image, LayoutGrid, Leaf, List, Lock, MapPin, Martini, Milk, Minus, Package, Pizza, Plus, Popcorn, Salad,
+  Hamburger, IceCreamCone, Image, LayoutGrid, Leaf, List, Lock, Map as MapIcon, MapPin, Martini, Milk, Minus, Package, Pizza, Plus, Popcorn, Salad,
   Sandwich, ScanBarcode, Search, Settings, ShoppingBasket, ShoppingCart, Soup, Sprout, Store, Tag, User, Users, Utensils, Vegan,
   Wheat, Wine, X,
 } from 'lucide';
@@ -75,6 +75,10 @@ const UI_ICONS = {
   users: Users,
   settings: Settings,
   'book-open': BookOpen,
+  map: MapIcon,
+  'chef-hat': ChefHat,
+  calendar: CalendarDays,
+  'shopping-basket': ShoppingBasket,
   'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
 } satisfies Record<string, IconNode>;

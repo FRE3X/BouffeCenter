@@ -221,7 +221,7 @@
     position: fixed;
     z-index: 20;
     left: max(14px, env(safe-area-inset-left));
-    bottom: calc(24px + env(safe-area-inset-bottom));
+    bottom: max(24px + env(safe-area-inset-bottom), 14px + var(--tabbar-h));
     display: grid;
     place-items: center;
     width: 44px;
@@ -264,10 +264,11 @@
     .sheet {
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: var(--tabbar-h);
       width: auto;
+      max-height: calc(100dvh - var(--header-h) - var(--tabbar-h) - 24px);
       border-radius: 20px 20px 0 0;
-      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+      padding-bottom: calc(18px + max(0px, env(safe-area-inset-bottom) - var(--tabbar-h)));
     }
   }
   header {

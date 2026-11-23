@@ -18,14 +18,17 @@ const placeholders: Partial<Record<Mode, string>> = {
 const placeholder = placeholders[mode] ?? 'Chercher une recette…';
 const links = (
   [
-    { mode: 'map', href: '/', label: 'Carte' },
-    { mode: 'recipes', href: '/recettes', label: 'Recettes' },
-    { mode: 'planning', href: '/planning', label: 'Planning' },
-    { mode: 'products', href: '/produits', label: 'Produits' },
-    { mode: 'cellar', href: '/cave', label: 'Cave' },
+    { mode: 'map', href: '/', label: 'Carte', icon: 'map' },
+    { mode: 'recipes', href: '/recettes', label: 'Recettes', icon: 'chef-hat' },
+    { mode: 'planning', href: '/planning', label: 'Planning', icon: 'calendar' },
+    { mode: 'products', href: '/produits', label: 'Produits', icon: 'shopping-basket' },
+    { mode: 'cellar', href: '/cave', label: 'Cave', icon: 'wine' },
   ] as const
 ).filter((l) => !hidden.includes(l.mode));
 const activeIndex = Math.max(0, links.findIndex((l) => l.mode === mode));
+// Visitors never see private sections: the pill is positioned among the tabs they can see.
+const publicLinks = links.filter((l) => !locked.includes(l.mode));
+const publicIndex = publicLinks.findIndex((l) => l.mode === mode);
 const initialQuery = Astro.url.searchParams.get('q') ?? '';
 ---
 
@@ -47,18 +50,18 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     }
   </div>
 
-  <!-- With more than three tabs, the toggle scrolls sideways on phones (the track keeps the pill aligned). -->
+  <!-- Desktop and tablets: centred toggle. Phones use the bottom tab bar below instead. -->
   <nav
     class:list={['toggle glass', { wide: links.length > 2, many: links.length > 3 }]}
     aria-label="Mode d'affichage"
-    style={`--n: ${links.length}; --i: ${activeIndex}`}
+    style={`--n-all: ${links.length}; --i-all: ${activeIndex}; --n-public: ${Math.max(1, publicLinks.length)}; --i-public: ${Math.max(0, publicIndex)}`}
+    data-public-active={publicIndex >= 0 ? undefined : 'none'}
   >
     <div class="track">
       {
         links.map((l) => (
-          <a href={l.href} class:list={{ active: mode === l.mode }} aria-current={mode === l.mode ? 'page' : undefined}>
+          <a href={l.href} class:list={{ active: mode === l.mode, private: locked.includes(l.mode) }} aria-current={mode === l.mode ? 'page' : undefined}>
             {l.label}
-            {locked.includes(l.mode) && <span class="lock" title="Réservé aux membres"><Fragment set:html={icon('lock', 12, 2.5)} /><span class="visually-hidden"> (réservé aux membres)</span></span>}
           </a>
         ))
       }
@@ -73,12 +76,22 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
       <span class="initial" aria-hidden="true"></span>
       <span class="dot" aria-hidden="true"></span>
     </a>
-    <a class="brand glass" href="/admin" title="Espace membres" data-astro-prefetch="false">
-      <span class="full">Bouffe Center</span>
-      <span class="short" aria-hidden="true">BC</span>
-    </a>
+    <a class="brand glass" href="/admin" title="Espace membres" data-astro-prefetch="false">Bouffe Center</a>
   </div>
 </header>
+
+{
+  mode !== 'admin' && (
+    <nav class="tabbar" aria-label="Sections">
+      {links.map((l) => (
+        <a href={l.href} class:list={{ active: mode === l.mode, private: locked.includes(l.mode) }} aria-current={mode === l.mode ? 'page' : undefined}>
+          <span class="tab-icon"><Fragment set:html={icon(l.icon, 20)} /></span>
+          <span class="tab-label">{l.label}</span>
+        </a>
+      ))}
+    </nav>
+  )
+}
 
 <style>
   .site-header {
@@ -258,18 +271,32 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
   .toggle a.active {
     color: var(--accent-ink);
   }
-  /* Private section: a small lock for visitors (members never see it). */
-  .lock {
-    display: inline-block;
-    margin-left: 4px;
-    vertical-align: 1px;
-    opacity: 0.8;
+  /*
+    Private sections are left out of the toggle for visitors. Member detection runs before the first paint
+    (html.member), so the same cached HTML serves both and members never see the tabs flicker in.
+  */
+  .toggle {
+    --n: var(--n-public);
+    --i: var(--i-public);
   }
-  .lock :global(svg) {
-    display: inline-block;
-  }
-  :global(html.member) .lock {
+  .toggle a.private,
+  .tabbar a.private {
     display: none;
+  }
+  /* A visitor on a private page (members-only screen): no tab is highlighted. */
+  .toggle[data-public-active='none'] .pill {
+    visibility: hidden;
+  }
+  :global(html.member) .toggle {
+    --n: var(--n-all);
+    --i: var(--i-all);
+  }
+  :global(html.member) .toggle a.private,
+  :global(html.member) .tabbar a.private {
+    display: flex;
+  }
+  :global(html.member) .toggle[data-public-active='none'] .pill {
+    visibility: visible;
   }
 
   .brand {
@@ -287,27 +314,68 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     text-decoration: none;
     white-space: nowrap;
   }
-  .brand .short {
+
+  /* Phones: sections live in a tab bar at the bottom, within thumb reach. */
+  .tabbar {
     display: none;
   }
-
   @media (max-width: 640px) {
-    /* The side buttons keep their size; the toggle takes the rest and scrolls if needed. */
     .site-header {
       gap: 8px;
       grid-template-columns: auto minmax(0, 1fr) auto;
     }
     .toggle {
-      justify-self: center;
+      display: none;
+    }
+    .tabbar {
+      position: fixed;
+      z-index: 50;
+      inset: auto 0 0 0;
+      display: flex;
+      height: var(--tabbar-h);
+      padding: 6px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
+      /* Solid, unlike the floating pills: page text scrolling underneath must not show through the labels. */
+      background: var(--surface);
+      border-top: 1px solid var(--glass-border);
+      box-shadow: 0 -4px 20px rgb(31 27 22 / 0.08);
+    }
+    .tabbar a {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .tab-icon {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 30px;
+      border-radius: 999px;
+      transition:
+        background-color 0.2s,
+        color 0.2s;
+    }
+    .tab-label {
       max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.74rem;
+      line-height: 1.2;
     }
-    .toggle a {
-      padding: 7px 13px;
-      font-size: 0.95rem;
+    /* Active tab: white icon on the red pill (house style), label in ink. */
+    .tabbar a.active {
+      color: var(--ink);
     }
-    .toggle.wide a {
-      padding: 7px 10px;
-      font-size: 0.88rem;
+    .tabbar a.active .tab-icon {
+      background: var(--accent);
+      color: var(--accent-ink);
     }
     .search {
       width: 44px;
@@ -331,32 +399,6 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
   }
 </style>
 
-<style>
-  /* Three tabs on a small phone: tighter tabs, and the round account button alone links to the back-office. */
-  @media (max-width: 400px) {
-    .toggle.wide a {
-      padding: 6px 7px;
-      font-size: 0.8rem;
-    }
-    .site-header:has(.toggle.wide) .brand {
-      display: none;
-    }
-  }
-  @media (max-width: 480px) {
-    .brand {
-      width: 44px;
-      padding: 0;
-      justify-content: center;
-      font-size: 1rem;
-    }
-    .brand .full {
-      display: none;
-    }
-    .brand .short {
-      display: inline;
-    }
-  }
-</style>
 
 <script>
   // Show who is connected next to the logo (members only call /api/auth/me; visitors make no request).
@@ -405,10 +447,23 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     }
   }
 
+  // Bottom tab bar: highlight the tapped tab right away.
+  document.querySelectorAll<HTMLAnchorElement>('.tabbar a').forEach((link) => {
+    link.addEventListener('click', () => {
+      document.querySelector('.tabbar a.active')?.classList.remove('active');
+      link.classList.add('active');
+    });
+  });
+
   // Slide the pill before navigating so the toggle feels instant.
   const toggle = document.querySelector<HTMLElement>('.toggle');
-  document.querySelectorAll<HTMLAnchorElement>('.toggle a').forEach((link, i) => {
-    link.addEventListener('click', () => toggle?.style.setProperty('--i', String(i)));
+  // The index counts only the tabs on screen (visitors don't see private sections).
+  document.querySelectorAll<HTMLAnchorElement>('.toggle a').forEach((link) => {
+    link.addEventListener('click', () => {
+      const visible = [...document.querySelectorAll<HTMLAnchorElement>('.toggle a')].filter((a) => a.offsetParent !== null);
+      toggle?.style.setProperty('--i', String(visible.indexOf(link)));
+      toggle?.removeAttribute('data-public-active');
+    });
   });
   // A scrolling toggle (phones, many tabs) starts centred on the current tab.
   const current = document.querySelector<HTMLElement>('.toggle a[aria-current="page"]');
