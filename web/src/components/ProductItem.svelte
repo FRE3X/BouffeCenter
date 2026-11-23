@@ -149,12 +149,18 @@
     position: absolute;
     display: none;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: var(--accent);
     color: #fff;
     box-shadow: var(--shadow);
+  }
+  /* 44px touch target around the round button. */
+  .edit::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
   }
   :global(html.member) .edit {
     display: grid;

@@ -44,6 +44,7 @@
     box-shadow: 0 1px 2px rgb(31 27 22 / 0.06);
   }
   button {
+    position: relative;
     display: grid;
     place-items: center;
     width: 36px;
@@ -53,6 +54,15 @@
     background: transparent;
     color: var(--accent);
     cursor: pointer;
+  }
+  /* 44px tall touch target without growing the pill. */
+  button::after {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+  }
+  .sm button::after {
+    inset: -7px 0;
   }
   button:hover:not(:disabled) {
     background: color-mix(in srgb, var(--accent) 10%, transparent);

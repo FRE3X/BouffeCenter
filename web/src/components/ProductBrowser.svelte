@@ -206,14 +206,9 @@
   .add:hover {
     filter: brightness(1.08);
   }
-  /* Phones: a round "+" next to the view switch (the floating one stays bottom-left). */
+  /* Phones: only the floating "+" (bottom-left, within thumb reach) stays. */
   @media (max-width: 640px) {
     .add {
-      width: 38px;
-      padding: 0;
-      justify-content: center;
-    }
-    .add span {
       display: none;
     }
   }
@@ -228,8 +223,8 @@
   .views button {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 30px;
+    width: 40px;
+    height: 36px;
     border: 0;
     border-radius: 999px;
     background: none;

@@ -119,7 +119,8 @@ h3 {
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--surface-2);
-  color: var(--muted);
+  /* Muted alone is 4.2:1 on surface-2; nudged toward ink for AA. */
+  color: color-mix(in srgb, var(--muted) 75%, var(--ink));
   font-size: 0.8rem;
   white-space: nowrap;
   text-decoration: none;
@@ -150,6 +151,12 @@ h3 {
   cursor: pointer;
   white-space: nowrap;
   box-shadow: var(--shadow);
+}
+@media (pointer: coarse) {
+  /* Fingers, not cursors: chips reach about 42px tall. */
+  .chip {
+    padding: 10px 14px;
+  }
 }
 .chip[aria-pressed='true'] {
   background: var(--accent);

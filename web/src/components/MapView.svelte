@@ -580,12 +580,17 @@
     position: fixed;
     z-index: 10;
     top: calc(var(--header-h) + env(safe-area-inset-top) + 10px);
-    right: max(14px, env(safe-area-inset-right));
+    right: max(16px, env(safe-area-inset-right));
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 6px;
     border-radius: 999px;
+    /* Short phones: scroll inside the rail instead of running into the map controls below it. */
+    max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top) - 10px - var(--tabbar-h) - 230px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
     background: color-mix(in srgb, var(--surface) 72%, transparent);
     backdrop-filter: saturate(1.8) blur(16px);
     -webkit-backdrop-filter: saturate(1.8) blur(16px);
@@ -829,6 +834,15 @@
   :global(.maplibregl-ctrl-bottom-right),
   :global(.maplibregl-ctrl-bottom-left) {
     margin-bottom: max(env(safe-area-inset-bottom), var(--tabbar-h));
+  }
+  /* Same 16px gutter as the header, the category rail and the tab bar. */
+  :global(.maplibregl-ctrl-bottom-right .maplibregl-ctrl) {
+    margin-right: max(16px, env(safe-area-inset-right));
+  }
+  /* The expanded attribution stops before the round "+" in the bottom-left corner (wraps instead). */
+  :global(.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib.maplibregl-compact-show) {
+    box-sizing: border-box;
+    max-width: calc(100vw - 2 * max(16px, env(safe-area-inset-left)) - 44px - 12px);
   }
 
   /* Map controls in the house style (frosted glass), readable in light and dark mode. */

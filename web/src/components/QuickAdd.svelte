@@ -220,7 +220,7 @@
   .fab {
     position: fixed;
     z-index: 20;
-    left: max(14px, env(safe-area-inset-left));
+    left: max(16px, env(safe-area-inset-left));
     bottom: max(24px + env(safe-area-inset-bottom), 14px + var(--tabbar-h));
     display: grid;
     place-items: center;

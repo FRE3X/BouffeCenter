@@ -154,6 +154,10 @@ publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=60, stale-whil
     gap: 12px;
   }
   .back {
+    display: inline-block;
+    /* 44px tall tap zone; the negative margin keeps the layout unchanged. */
+    padding: 12px 0;
+    margin: -12px 0;
     color: var(--muted);
     text-decoration: none;
     font-size: 0.9rem;
