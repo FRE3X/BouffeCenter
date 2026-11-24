@@ -62,7 +62,7 @@
 <svelte:window onkeydown={(e) => e.key === 'Escape' && photoIndex === null && onclose()} />
 
 <aside class="panel" aria-label="Détail de l'adresse">
-  <button class="close" aria-label="Fermer" onclick={onclose}>✕</button>
+  <button class="close" aria-label="Fermer" onclick={onclose}>{@html icon('x', 20, 2.5)}</button>
   {#if error}
     <p class="state">Impossible de charger cette adresse.</p>
   {:else if !place}
@@ -208,19 +208,45 @@
       }
     }
   }
+  /* Dark frosted disc + light ring: readable over any photo and on the plain panel, in both themes. */
   .close {
     position: sticky;
-    top: 10px;
+    top: 12px;
     float: right;
-    margin: 10px 10px -44px 0;
+    margin: 12px 12px -52px 0;
     z-index: 2;
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    border: 0;
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    box-shadow: var(--shadow);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgb(255 255 255 / 0.35);
+    background: rgb(20 17 14 / 0.75);
+    backdrop-filter: blur(10px) saturate(1.4);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    color: #fff;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.3);
     cursor: pointer;
+    transition:
+      background-color 0.15s,
+      transform 0.15s;
+  }
+  /* 44px touch target. */
+  .close::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+  }
+  .close:hover {
+    background: rgb(20 17 14 / 0.9);
+  }
+  .close:active {
+    transform: scale(0.94);
+  }
+  .close:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .skeleton {
     height: 220px;
