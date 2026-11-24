@@ -123,11 +123,46 @@ publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=60, stale-whil
         </section>
       )
     }
+    <!-- Phones: the top link scrolls away, so a floating way back stays within thumb reach. -->
+    <a class="back-fab" href="/recettes" aria-label="Retour aux recettes">
+      <Fragment set:html={icon('chevron-left', 20, 2.5)} />
+      <span>Recettes</span>
+    </a>
   </article>
   )}
 </Base>
 
 <style>
+  .back-fab {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .back-fab {
+      position: fixed;
+      z-index: 20;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: calc(var(--tabbar-h) + 12px);
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      height: 44px;
+      padding: 0 16px 0 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 72%, transparent);
+      backdrop-filter: saturate(1.8) blur(16px);
+      -webkit-backdrop-filter: saturate(1.8) blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 20px rgb(31 27 22 / 0.14);
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+    .back-fab:active {
+      transform: scale(0.97);
+    }
+  }
   article {
     max-width: 960px;
     margin: 0 auto;
@@ -291,6 +326,17 @@ publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=60, stale-whil
 <script>
   import { stockBadge } from '../../lib/icons';
   import { onMember } from '../../lib/member';
+
+  // Coming from the recipe list: go back in history, so its tag filters and scroll position are kept.
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('.back, .back-fab')) {
+    link.addEventListener('click', (e) => {
+      const from = document.referrer && new URL(document.referrer);
+      if (from && from.origin === location.origin && from.pathname === '/recettes' && history.length > 1) {
+        e.preventDefault();
+        history.back();
+      }
+    });
+  }
 
   // Members only: mark each linked product as in stock (✓) or not (✗). The page itself stays publicly cached.
   const aside = document.querySelector<HTMLElement>('aside[data-recipe]');
