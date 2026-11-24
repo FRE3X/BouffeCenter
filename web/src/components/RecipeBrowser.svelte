@@ -6,12 +6,13 @@
   import RecipeCard from './RecipeCard.svelte';
   import { isMember, onMember } from '../lib/member';
 
-  let { initial, tags, initialTag = null }: { initial: RecipeList; tags: { tag: string; count: number }[]; initialTag?: string | null } =
+  let { initial, tags, initialTags = [] }: { initial: RecipeList; tags: { tag: string; count: number }[]; initialTags?: string[] } =
     $props();
 
   let list = $state(initial);
   let query = $state('');
-  let tag = $state<string | null>(initialTag);
+  // Several tags can be combined: a recipe must carry all of them.
+  let selectedTags = $state<string[]>(initialTags);
   let loading = $state(false);
   let member = $state(false);
   // Keyboard selection from the search field: ↑/↓ to move, Entrée to open.
@@ -24,7 +25,7 @@
     loading = true;
     const params = new URLSearchParams({ limit: '24', offset: append ? String(list.items.length) : '0' });
     if (query.trim()) params.set('q', query.trim());
-    if (tag) params.set('tag', tag);
+    if (selectedTags.length) params.set('tag', selectedTags.join(','));
     const q = query.trim();
     // Products and wines matching the search (sections closed to the visitor are left out by the API).
     const related = !append && q.length >= 2 ? fetch(`/api/products?limit=4&q=${encodeURIComponent(q)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null) : null;
@@ -38,13 +39,26 @@
 
     const url = new URL(location.href);
     query.trim() ? url.searchParams.set('q', query.trim()) : url.searchParams.delete('q');
-    tag ? url.searchParams.set('tag', tag) : url.searchParams.delete('tag');
+    selectedTags.length ? url.searchParams.set('tag', selectedTags.join(',')) : url.searchParams.delete('tag');
     history.replaceState(null, '', url);
   }
 
   function toggleTag(t: string | null) {
-    tag = tag === t ? null : t;
+    selectedTags = t === null ? [] : selectedTags.includes(t) ? selectedTags.filter((x) => x !== t) : [...selectedTags, t];
     load();
+  }
+
+  // Fade the edges of the chip row while there is more to scroll that way.
+  function scrollFade(node: HTMLElement) {
+    const update = () => {
+      node.classList.toggle('more-start', node.scrollLeft > 4);
+      node.classList.toggle('more-end', node.scrollLeft + node.clientWidth < node.scrollWidth - 4);
+    };
+    update();
+    node.addEventListener('scroll', update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return { destroy: () => (node.removeEventListener('scroll', update), observer.disconnect()) };
   }
 
   onMount(() => {
@@ -87,10 +101,12 @@
 </script>
 
 {#if tags.length}
-  <div class="chip-row" role="toolbar" aria-label="Filtrer par tag">
-    <button class="chip" aria-pressed={tag === null} onclick={() => toggleTag(null)}>Toutes</button>
+  <div class="chip-row" role="toolbar" aria-label="Filtrer par tag (plusieurs possibles)" use:scrollFade>
+    <button class="chip" aria-pressed={selectedTags.length === 0} onclick={() => toggleTag(null)}>Toutes</button>
     {#each tags as t (t.tag)}
-      <button class="chip" aria-pressed={tag === t.tag} onclick={() => toggleTag(t.tag)}>#{t.tag}</button>
+      <button class="chip" aria-pressed={selectedTags.includes(t.tag)} onclick={() => toggleTag(t.tag)}>
+        #{t.tag}<span class="count">{t.count}</span>
+      </button>
     {/each}
   </div>
 {/if}
@@ -99,7 +115,7 @@
   {#each list.items as recipe, i (recipe.id)}
     <RecipeCard {recipe} eager={i < 4} editable={member} active={i === activeIndex} />
   {:else}
-    <p class="empty">{query || tag ? 'Aucune recette ne correspond.' : 'Aucune recette publiée pour le moment.'}</p>
+    <p class="empty">{query || selectedTags.length ? 'Aucune recette ne correspond.' : 'Aucune recette publiée pour le moment.'}</p>
   {/each}
 </div>
 
@@ -126,9 +142,25 @@
 <style>
   .chip-row {
     margin-bottom: 20px;
+    --fade-start: 0px;
+    --fade-end: 0px;
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+  }
+  .chip-row:global(.more-start) {
+    --fade-start: 28px;
+  }
+  .chip-row:global(.more-end) {
+    --fade-end: 40px;
   }
   .chip-row .chip {
     box-shadow: none;
+  }
+  /* How many recipes carry the tag; follows the chip's text colour. */
+  .chip .count {
+    margin-left: 2px;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.65;
   }
   .grid {
     display: grid;

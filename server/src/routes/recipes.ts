@@ -146,9 +146,11 @@ export const recipes = new Hono<AuthEnv>()
       where.push('c.slug = ?');
       params.push(f.category);
     }
-    if (f.tag) {
+    // Several tags separated by commas: a recipe must carry all of them.
+    const tags = (f.tag ?? '').split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 10);
+    for (const t of tags) {
       where.push('EXISTS (SELECT 1 FROM json_each(r.tags) WHERE value = ?)');
-      params.push(f.tag.toLowerCase());
+      params.push(t);
     }
     const search = searchClause(f.q, 'r.search');
     if (search.sql) {

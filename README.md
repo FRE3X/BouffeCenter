@@ -113,7 +113,7 @@ The website is just one client of the REST API under `/api`; a mobile app and an
 | POST / PATCH / DELETE | `/api/places[/:id]` | member (edit: author or admin) |
 | PUT / DELETE | `/api/places/:id/review` | member: own review `{ rating: 1..10, comment }` |
 | PUT | `/api/places/:id/tried` | member: `{ tried: true \| false }` |
-| GET | `/api/recipes?q=&category=&tag=&limit=&offset=` | public¹ |
+| GET | `/api/recipes?q=&category=&tag=a,b&limit=&offset=` (several tags: all required) | public¹ |
 | GET | `/api/recipes/:idOrSlug` | public¹ (+ linked `products`, with `quantity` for members) |
 | POST / PATCH / DELETE | `/api/recipes[/:id]` | member (edit: author or admin) |
 | PUT | `/api/recipes/:id/products` `{ product_ids }` | member (author or admin): recommended products and wine pairings |

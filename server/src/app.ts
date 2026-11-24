@@ -49,7 +49,7 @@ const api = new Hono<AuthEnv>()
         'GET /api/places/geojson',
         'GET /api/places?q=&category=&tag=',
         'GET /api/places/:idOrSlug',
-        'GET /api/recipes?q=&category=&tag=&limit=&offset=',
+        'GET /api/recipes?q=&category=&tag=a,b (tous les tags requis)&limit=&offset=',
         'GET /api/recipes/:idOrSlug',
         'PUT /api/recipes/:id/products { product_ids } (auteur ou admin ; produits conseillés et accords mets-vins)',
         'GET /api/products?kind=pantry|wine (sans kind : toutes les sections visibles)&q=&category=&tag=&in_stock=1&limit=&offset= (quantity et in_stock réservés aux membres)',

@@ -6,10 +6,11 @@ import { publicCache, sectionAccess, serverApi } from '../../lib/api';
 import type { RecipeList } from '../../lib/types';
 
 const q = Astro.url.searchParams.get('q') ?? '';
-const tag = Astro.url.searchParams.get('tag');
+// `?tag=a,b`: several tags, all required.
+const tags = (Astro.url.searchParams.get('tag') ?? '').split(',').map((t) => t.trim()).filter(Boolean);
 const params = new URLSearchParams({ limit: '24' });
 if (q) params.set('q', q);
-if (tag) params.set('tag', tag);
+if (tags.length) params.set('tag', tags.join(','));
 
 const access = await sectionAccess(Astro, 'recipes');
 const data = await Promise.all([
@@ -27,7 +28,7 @@ publicCache(Astro, access.isPrivate, 'public, max-age=0, s-maxage=30, stale-whil
     data ? (
       <main>
         <h1>Recettes maison</h1>
-        <RecipeBrowser client:load initial={data[0] ?? { items: [], total: 0, limit: 24, offset: 0 }} tags={data[1] ?? []} initialTag={tag} />
+        <RecipeBrowser client:load initial={data[0] ?? { items: [], total: 0, limit: 24, offset: 0 }} tags={data[1] ?? []} initialTags={tags} />
       </main>
     ) : (
       <MembersOnly label="Le livre de recettes" />

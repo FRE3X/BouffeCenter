@@ -13,12 +13,17 @@
     slug,
     onclose,
     onfilter,
+    ontag,
+    activeTag = null,
     ontried,
     tried,
   }: {
     slug: string;
     onclose: () => void;
     onfilter?: (category: string) => void;
+    /** Filters the map by this tag. */
+    ontag?: (tag: string) => void;
+    activeTag?: string | null;
     /** Present for members: marks the place as tried / not tried. */
     ontried?: (id: number, tried: boolean) => Promise<boolean>;
     /** "Tried" state owned by the map, so the panel and the marker can never disagree. */
@@ -111,7 +116,13 @@
 
       {#if place.tags.length}
         <div class="tags">
-          {#each place.tags as tag}<span class="tag">#{tag}</span>{/each}
+          {#each place.tags as tag}
+            {#if ontag}
+              <button class="tag tag-link" aria-pressed={activeTag === tag} title={`Voir les adresses #${tag}`} onclick={() => ontag(tag)}>#{tag}</button>
+            {:else}
+              <span class="tag">#{tag}</span>
+            {/if}
+          {/each}
         </div>
       {/if}
 
@@ -374,6 +385,30 @@
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 12px;
+  }
+  /* Tappable tags: they filter the map. */
+  .tag-link {
+    position: relative;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .tag-link::after {
+    content: '';
+    position: absolute;
+    inset: -6px -2px;
+  }
+  .tag-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tag-link[aria-pressed='true'] {
+    background: var(--accent);
+    color: var(--accent-ink);
   }
   .description {
     margin: 14px 0 0;

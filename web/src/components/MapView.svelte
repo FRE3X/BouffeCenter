@@ -7,7 +7,7 @@
   import { isMember, onMember } from '../lib/member';
   import QuickAdd from './QuickAdd.svelte';
   import { rating, ratingColor } from '../lib/format';
-  import { iconBadge, triedBadge } from '../lib/icons';
+  import { icon, iconBadge, triedBadge } from '../lib/icons';
   import PlacePanel from './PlacePanel.svelte';
 
   // The phone tab bar covers the bottom of the map: keep fitted places and the selected one above it.
@@ -36,6 +36,8 @@
   let container: HTMLDivElement;
   let map: MLMap | undefined;
   let activeCategory = $state<string | null>(null);
+  // Tag filter (from a place sheet or a shared `?tag=` link), combined with the category.
+  let activeTag = $state<string | null>(new URL(location.href).searchParams.get('tag'));
   let query = $state('');
   // Read before the URL-sync effect below runs, so a shared `?lieu=` link survives mount.
   const initialSlug = new URL(location.href).searchParams.get('lieu');
@@ -93,6 +95,7 @@
     return features.filter(
       (f) =>
         (!activeCategory || f.properties.category === activeCategory) &&
+        (!activeTag || f.properties.tags.includes(activeTag)) &&
         words.every((w) => f.properties.search.includes(w)),
     );
   });
@@ -107,12 +110,21 @@
     fitTo(visible);
   }
 
-  /** Frames the given places, keeping the zoom reasonable for a single one. */
+  /** Shows only the places carrying this tag (tap again, or ✕, to clear). Closes the sheet to reveal them. */
+  function filterByTag(tag: string | null) {
+    activeTag = activeTag === tag ? null : tag;
+    if (activeTag) selected = null;
+    fitTo(visible);
+  }
+
+  /** Frames the given places (clear of the filter pill on top), keeping the zoom reasonable for a single one. */
   function fitTo(list: Feature[]) {
     if (!map || !list.length) return;
     const bounds = new maplibregl.LngLatBounds();
     list.forEach((f) => bounds.extend(f.geometry.coordinates));
-    map.fitBounds(bounds, { padding: { top: 120, bottom: 80 + tabbarHeight(), left: 60, right: 90 }, maxZoom: 15, duration: 600 });
+    // Opening a sheet flies with a large bottom padding that MapLibre keeps; drop it so it doesn't add up here.
+    map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
+    map.fitBounds(bounds, { padding: { top: 170, bottom: 80 + tabbarHeight(), left: 60, right: 90 }, maxZoom: 15, duration: 600 });
   }
 
   // Every published category appears in the rail, even before it has places.
@@ -197,6 +209,8 @@
     const url = new URL(location.href);
     if (selected) url.searchParams.set('lieu', selected);
     else url.searchParams.delete('lieu');
+    if (activeTag) url.searchParams.set('tag', activeTag);
+    else url.searchParams.delete('tag');
     history.replaceState(null, '', url);
   });
 
@@ -274,7 +288,7 @@
       center: [2.3488, 48.8534],
       zoom: 11,
       attributionControl: { compact: true },
-      ...(features.length ? { bounds, fitBoundsOptions: { padding: { top: 120, bottom: 70 + tabbarHeight(), left: 70, right: 90 }, maxZoom: 14 } } : {}),
+      ...(features.length ? { bounds, fitBoundsOptions: { padding: { top: activeTag ? 170 : 120, bottom: 70 + tabbarHeight(), left: 70, right: 90 }, maxZoom: 14 } } : {}),
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
     map.addControl(
@@ -425,11 +439,22 @@
   </nav>
 {/if}
 
-{#if activeInfo}
+{#if activeInfo || activeTag}
   <div class="active-filter" role="status">
-    {@html iconBadge(activeInfo.icon, 24)}
-    <span><strong>{activeInfo.name}</strong> · {visible.length} adresse{visible.length > 1 ? 's' : ''}</span>
-    <button aria-label="Retirer le filtre" onclick={() => filterBy(null)}>✕</button>
+    {#if activeInfo}
+      <span class="filter-part">
+        {@html iconBadge(activeInfo.icon, 24)}
+        <strong>{activeInfo.name}</strong>
+        <button aria-label={`Retirer le filtre ${activeInfo.name}`} onclick={() => filterBy(null)}>{@html icon('x', 14, 2.5)}</button>
+      </span>
+    {/if}
+    {#if activeTag}
+      <span class="filter-part">
+        <strong class="tag-name">#{activeTag}</strong>
+        <button aria-label={`Retirer le filtre #${activeTag}`} onclick={() => filterByTag(null)}>{@html icon('x', 14, 2.5)}</button>
+      </span>
+    {/if}
+    <span class="count">{visible.length} adresse{visible.length > 1 ? 's' : ''}</span>
   </div>
 {/if}
 
@@ -521,6 +546,8 @@
     slug={selected}
     onclose={() => (selected = null)}
     onfilter={(slug) => activeCategory !== slug && filterBy(slug)}
+    ontag={filterByTag}
+    {activeTag}
     ontried={member ? setTried : undefined}
     tried={selectedFeature ? isTried(selectedFeature.properties) : undefined}
   />
@@ -562,13 +589,40 @@
     white-space: nowrap;
     animation: pop-in 0.18s ease-out;
   }
+  .filter-part {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-part + .filter-part {
+    padding-left: 8px;
+    border-left: 1px solid var(--line);
+  }
+  .tag-name {
+    padding-left: 6px;
+  }
+  .count {
+    padding-right: 10px;
+    color: var(--muted);
+  }
   .active-filter button {
+    position: relative;
+    display: grid;
+    place-items: center;
     width: 26px;
     height: 26px;
+    padding: 0;
     border: 0;
     border-radius: 50%;
     background: var(--surface-2);
+    color: var(--ink);
     cursor: pointer;
+  }
+  /* 40px touch target around the small round ✕. */
+  .active-filter button::after {
+    content: '';
+    position: absolute;
+    inset: -7px;
   }
   @keyframes pop-in {
     from {
