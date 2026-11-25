@@ -15,6 +15,7 @@ A small, self-hosted app to share good food with friends: a map of favourite pla
 - **Weekly meal planner**: Monday to Sunday, breakfast / lunch / dinner, one or more recipes per slot. Members also get a **shopping list**: out-of-stock products linked to the week's recipes.
 - **Products** (optional section, on by default): products we recommend (brand, photo, where to buy, price, category, tags) with a shared **household stock** in whole numbers. Members only see what is in stock by default ("Afficher tout" or a search shows the rest), and adjust quantities with −/+ buttons. Visitors see the recommendations, never the stock. Cards or list view. Products can be prefilled from [Open Food Facts](https://world.openfoodfacts.org/) by name or by **scanning the barcode** with the phone's camera.
 - **Cellar** (optional section, on by default): wines, spirits and other drinks, with type, vintage, appellation, region, grapes, ABV, drinking window, purchase price and location (the last two for members only). Optionally prefilled from the [GrapeMinds](https://grapeminds.eu/fr/api-vin) wine database once an admin saves an API key.
+- **Recipe drafts with Ollama** (optional): once an admin connects an [Ollama](https://ollama.com) server (Admin > Settings: address, model, optional token), members describe a dish in a few words and the recipe editor is prefilled (title, description, ingredients, steps, tags, category). Nothing is saved before they review it.
 - **Links**: a recipe lists its recommended products and wine pairings (with an in-stock mark for members); a product lists the recipes it is used in. The ⌘K search on the map and the recipes also shows related products.
 - **Back-office** at `/admin` for members (invite-only, `admin` or `editor` role): places, recipes, photos, categories, members, personal API keys, settings, and full backup / restore.
 - **Public read-only site**: map, place pages, reviews, recipes and planning are visible without an account. In Admin › Paramètres, an admin can make each section (map, recipes, planning, products, cellar) **private**: visitors then see a "members only" screen with a sign-in button, and the API answers `401`. Everything is public by default.
@@ -93,7 +94,7 @@ From **Admin › Paramètres**, an admin can download a full backup (`.tar.gz`: 
 curl -H "Authorization: Bearer bc_…" -o backup.tar.gz https://your-domain.example/api/backup
 ```
 
-Restoring requires a signed-in session (not an API key), upgrades older backups to the current schema, and signs every user out. Integration keys (GrapeMinds) are never part of a backup: a restore keeps the server's own.
+Restoring requires a signed-in session (not an API key), upgrades older backups to the current schema, and signs every user out. Integration settings (GrapeMinds key, Ollama connection) are never part of a backup: a restore keeps the server's own.
 
 ## Members
 
@@ -131,8 +132,10 @@ The website is just one client of the REST API under `/api`; a mobile app and an
 | GET | `/api/planning?week=YYYY-MM-DD` | public¹ |
 | GET | `/api/planning/shopping?week=YYYY-MM-DD` | member: out-of-stock products linked to the week's recipes |
 | PUT | `/api/planning/:date/:meal` `{ recipe_ids }` | member (`meal` = `breakfast` \| `lunch` \| `dinner`) |
-| GET / PATCH | `/api/settings` `{ map_private, recipes_private, planning_private, products_private, cellar_private, products_enabled, cellar_enabled }` | public / admin (`GET` also tells `grapeminds_enabled`) |
+| GET / PATCH | `/api/settings` `{ map_private, recipes_private, planning_private, products_private, cellar_private, products_enabled, cellar_enabled }` | public / admin (`GET` also tells `grapeminds_enabled` and `ollama_enabled`) |
 | GET / PUT / DELETE | `/api/integrations/grapeminds` `{ api_key }`, POST `/api/integrations/grapeminds/test` | admin (PUT / DELETE: session only); the key is never returned |
+| GET / PUT / DELETE | `/api/integrations/ollama` `{ url, model, token? }`, POST `/api/integrations/ollama/test`, POST `/api/integrations/ollama/models` `{ url, token? }` | admin (PUT / DELETE: session only); the token is never returned |
+| POST | `/api/recipes/generate` `{ prompt }` | member, when Ollama is connected: returns a draft `{ title, description, ingredients, body, tags, category_id }`, saves nothing |
 | GET / POST / PATCH / DELETE | `/api/users[/:id]`, POST `/api/users/:id/invite` | admin |
 | POST | `/api/auth/login` → `{ user, token }`, `/api/auth/logout` | public |
 | GET / PATCH | `/api/auth/me` | member |

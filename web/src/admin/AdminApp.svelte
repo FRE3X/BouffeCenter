@@ -17,6 +17,7 @@
     products_enabled: true,
     cellar_enabled: true,
     grapeminds_enabled: false,
+    ollama_enabled: false,
   });
   let ready = $state(false);
   let route = $state(location.hash.slice(1) || '/');
@@ -105,7 +106,7 @@
       {/await}
     {:else if parts[0] === 'recettes' && parts[1]}
       {#await import('./RecipeEdit.svelte') then { default: RecipeEdit }}
-        {#key parts[1]}<RecipeEdit id={Number(parts[1])} {user} />{/key}
+        {#key parts[1]}<RecipeEdit id={Number(parts[1])} {user} ollama={settings.ollama_enabled} />{/key}
       {/await}
     {:else if parts[0] === 'recettes'}
       <RecipesList {user} />

@@ -9,6 +9,7 @@ import { imageUrls, removeImageFiles } from '../lib/images.ts';
 import { assertSectionVisible, isLocked, isPrivate } from '../lib/settings.ts';
 import { PRODUCT_SELECT, type ProductRow, sectionOf, serializeProductCard } from './products.ts';
 import { cleanTags, normalize, parseJsonArray, searchClause } from '../lib/text.ts';
+import { generateRecipeDraft } from '../lib/ollama.ts';
 
 export type RecipeRow = {
   id: number;
@@ -180,6 +181,12 @@ export const recipes = new Hono<AuthEnv>()
     const recipe = { ...serializeFull(row), products: linkedProducts(row.id, user) };
     // The linked place belongs to the map: hide it when the map is private.
     return c.json(isLocked(user, 'map') ? { ...recipe, place: null } : recipe);
+  })
+
+  /** Drafts a recipe from a prompt with the configured Ollama model. Nothing is saved: the editor gets prefilled. */
+  .post('/generate', validate('json', z.object({ prompt: z.string().trim().min(3, 'Décrivez la recette en quelques mots').max(2000) })), async (c) => {
+    requireUser(c);
+    return c.json(await generateRecipeDraft(c.req.valid('json').prompt));
   })
 
   .post('/', validate('json', recipeInput), (c) => {

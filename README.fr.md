@@ -15,6 +15,7 @@ Une petite application auto-hébergée pour partager entre amis : une carte des 
 - **Planning des menus** : du lundi au dimanche, matin / midi / soir, une ou plusieurs recettes par case. Les membres y ont aussi une **liste de courses** : les produits à 0 liés aux recettes de la semaine.
 - **Produits** (section optionnelle, active par défaut) : les produits que l'on recommande (marque, photo, où l'acheter, prix, catégorie, tags) avec un **stock commun** en nombre entier. Les membres ne voient par défaut que ce qui est en stock (« Afficher tout » ou une recherche montre le reste) et ajustent les quantités avec des boutons −/+. Les visiteurs voient les recommandations, jamais le stock. Affichage en cards ou en liste. Préremplissage depuis [Open Food Facts](https://fr.openfoodfacts.org/) par le nom ou en **scannant le code-barres** avec l'appareil photo du téléphone.
 - **Cave** (section optionnelle, active par défaut) : vins, spiritueux et autres alcools, avec type, millésime, appellation, région, cépages, degré, période de dégustation, prix d'achat et emplacement (ces deux derniers pour les membres). Préremplissage facultatif depuis la base [GrapeMinds](https://grapeminds.eu/fr/api-vin) une fois qu'un admin a enregistré une clé API.
+- **Brouillons de recettes avec Ollama** (facultatif) : une fois qu'un admin a branché un serveur [Ollama](https://ollama.com) (Admin > Paramètres : adresse, modèle, jeton facultatif), les membres décrivent un plat en quelques mots et l'éditeur de recette est prérempli (titre, description, ingrédients, étapes, tags, catégorie). Rien n'est enregistré avant leur relecture.
 - **Liens** : une recette affiche ses produits conseillés et ses accords mets-vins (avec un repère de stock pour les membres) ; un produit affiche les recettes qui l'utilisent. La recherche ⌘K de la carte et des recettes montre aussi les produits liés.
 - **Back-office** sur `/admin` pour les membres (sur invitation, rôle `admin` ou `editor`) : adresses, recettes, photos, catégories, membres, clés API personnelles, paramètres, sauvegarde et restauration complètes.
 - **Site public en lecture seule** : carte, fiches, avis, recettes et planning sont visibles sans compte. Dans Admin › Paramètres, un admin peut rendre chaque section (carte, recettes, planning, produits, cave) **privée** : les visiteurs voient alors un écran « Section réservée aux membres » avec un bouton de connexion, et l'API leur répond `401`. Par défaut, tout est public.
@@ -93,7 +94,7 @@ Depuis **Admin › Paramètres**, un admin télécharge une sauvegarde complète
 curl -H "Authorization: Bearer bc_…" -o sauvegarde.tar.gz https://ton-domaine.fr/api/backup
 ```
 
-La restauration demande une session (pas de clé API), met à niveau une sauvegarde plus ancienne et déconnecte tout le monde. Les clés d'intégration (GrapeMinds) ne font jamais partie d'une sauvegarde : une restauration conserve celle du serveur.
+La restauration demande une session (pas de clé API), met à niveau une sauvegarde plus ancienne et déconnecte tout le monde. Les réglages d'intégration (clé GrapeMinds, connexion Ollama) ne font jamais partie d'une sauvegarde : une restauration conserve ceux du serveur.
 
 ## Membres
 

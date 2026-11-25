@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { validate } from '../lib/validate.ts';
 import { type AuthEnv, requireAdmin } from '../lib/auth.ts';
 import { grapemindsConfigured } from '../lib/grapeminds.ts';
+import { ollamaConfigured } from '../lib/ollama.ts';
 import { getSettings, setSettings } from '../lib/settings.ts';
 
 const settingsInput = z
@@ -18,7 +19,7 @@ const settingsInput = z
   .partial();
 
 /** Public settings, plus whether optional integrations are available (never their keys). */
-const publicSettings = () => ({ ...getSettings(), grapeminds_enabled: grapemindsConfigured() });
+const publicSettings = () => ({ ...getSettings(), grapeminds_enabled: grapemindsConfigured(), ollama_enabled: ollamaConfigured() });
 
 export const settings = new Hono<AuthEnv>()
   .get('/', (c) => c.json(publicSettings()))

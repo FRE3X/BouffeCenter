@@ -10,7 +10,7 @@
   import { icon, iconBadge } from '../lib/icons';
   import { productSubtitle } from '../lib/products';
 
-  let { id, user }: { id: number; user: User } = $props();
+  let { id, user, ollama = false }: { id: number; user: User; ollama?: boolean } = $props();
 
   let recipe = $state<Recipe | null>(null);
   let categories = $state<Category[]>([]);
@@ -34,6 +34,35 @@
   let saving = $state(false);
   let error = $state('');
   let focus = $state(false);
+
+  // ---- Draft with Ollama (optional): prefills the form, nothing is saved until "Enregistrer".
+  type Draft = Pick<typeof form, 'title' | 'description' | 'ingredients' | 'body' | 'tags' | 'category_id'>;
+  let prompt = $state('');
+  let generating = $state(false);
+  let elapsed = $state(0);
+  let showAi = $state(false);
+  // The block editor reads its content once: a new key rebuilds it with the generated steps.
+  let editorKey = $state(0);
+  const isEmpty = $derived(!form.body.trim() && form.ingredients.length === 0);
+
+  async function generate() {
+    if (!isEmpty && !confirm('Remplacer le titre, la description, les ingrédients, la préparation et les tags par la proposition de l\'IA ?')) return;
+    generating = true;
+    elapsed = 0;
+    const timer = setInterval(() => elapsed++, 1000);
+    try {
+      const draft = await api.post<Draft>('/recipes/generate', { prompt });
+      form = { ...form, ...draft, category_id: draft.category_id ?? form.category_id };
+      editorKey++;
+      showAi = false;
+      notify('Recette proposée : relisez-la, puis enregistrez');
+    } catch (e) {
+      notify((e as Error).message, 'error');
+    } finally {
+      clearInterval(timer);
+      generating = false;
+    }
+  }
 
   const canEdit = $derived(recipe !== null && (user.role === 'admin' || recipe.author_id === user.id));
   const dirty = $derived(JSON.stringify(form) !== saved);
@@ -126,6 +155,33 @@
 {:else}
   <div class="edit-grid">
     <div>
+      {#if ollama && (isEmpty || showAi)}
+        <section class="card ai">
+          <h2>{@html icon('chef-hat', 18)} Proposer une recette</h2>
+          <form
+            onsubmit={(e) => {
+              e.preventDefault();
+              generate();
+            }}
+          >
+            <textarea
+              bind:value={prompt}
+              rows="3"
+              placeholder="Ex. : un bœuf bourguignon pour 6, sans champignons, à préparer la veille"
+              aria-label="Décrivez la recette"
+              disabled={generating}
+              onkeydown={(e) => (e.metaKey || e.ctrlKey) && e.key === 'Enter' && prompt.trim().length >= 3 && !generating && generate()}
+            ></textarea>
+            <div class="ai-actions">
+              <span class="muted small-hint">
+                {generating ? `Ollama rédige la recette… ${elapsed} s` : 'Titre, ingrédients, étapes et tags seront préremplis. Rien n\'est enregistré avant votre relecture.'}
+              </span>
+              {#if showAi && !isEmpty}<button type="button" class="btn small" disabled={generating} onclick={() => (showAi = false)}>Annuler</button>{/if}
+              <button class="btn primary" disabled={generating || prompt.trim().length < 3}>{generating ? 'Génération…' : 'Générer'}</button>
+            </div>
+          </form>
+        </section>
+      {/if}
       <section class="card">
         <input class="title" bind:value={form.title} placeholder="Titre de la recette" aria-label="Titre" />
         <textarea class="lead" bind:value={form.description} rows="2" placeholder="Une courte description pour la carte de la recette…" aria-label="Description"></textarea>
@@ -135,10 +191,11 @@
         <header>
           <h2>Préparation</h2>
           <span class="muted hint">Tape « / » pour insérer un titre, des étapes, une photo…</span>
+          {#if ollama && !isEmpty && !showAi}<button type="button" class="btn small" onclick={() => (showAi = true)}>Proposer avec l'IA</button>{/if}
           <button type="button" class="btn small" onclick={() => (focus = !focus)}>{focus ? 'Quitter le plein écran' : 'Plein écran'}</button>
         </header>
         <div class="page">
-          <BlockEditor bind:value={form.body} ownerId={id} />
+          {#key editorKey}<BlockEditor bind:value={form.body} ownerId={id} />{/key}
         </div>
       </section>
 
@@ -209,6 +266,31 @@
 {/if}
 
 <style>
+  .ai {
+    border: 1.5px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  }
+  .ai h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ai h2 :global(svg) {
+    color: var(--accent);
+  }
+  .ai textarea {
+    width: 100%;
+    resize: vertical;
+  }
+  .ai-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .small-hint {
+    flex: 1;
+    font-size: 0.85rem;
+  }
   .back {
     display: inline-block;
     margin-bottom: 10px;

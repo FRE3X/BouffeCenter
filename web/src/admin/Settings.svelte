@@ -32,9 +32,50 @@
   let key = $state('');
   let busy = $state(false);
 
+  type Ollama = { configured: boolean; url?: string; model?: string; has_token?: boolean };
+  type OllamaModel = { name: string; size: number; parameters: string | null };
+  let ollama = $state<Ollama | null>(null);
+  let ol = $state({ url: '', model: '', token: '' });
+  let models = $state<OllamaModel[]>([]);
+  let olBusy = $state(false);
+
   onMount(async () => {
-    gm = await api.get<GrapeMinds>('/integrations/grapeminds').catch(() => null);
+    [gm, ollama] = await Promise.all([
+      api.get<GrapeMinds>('/integrations/grapeminds').catch(() => null),
+      api.get<Ollama>('/integrations/ollama').catch(() => null),
+    ]);
+    if (ollama?.configured) ol = { url: ollama.url!, model: ollama.model!, token: '' };
   });
+
+  const gb = (bytes: number) => (bytes ? `${(bytes / 1e9).toFixed(1).replace('.', ',')} Go` : '');
+
+  async function loadModels() {
+    olBusy = true;
+    try {
+      models = (await api.post<{ models: OllamaModel[] }>('/integrations/ollama/models', { url: ol.url, token: ol.token || undefined })).models;
+      if (!models.length) notify('Aucun modèle installé sur ce serveur (ollama pull …)', 'error');
+      else if (!models.some((m) => m.name === ol.model)) ol.model = models[0].name;
+    } catch (e) {
+      notify((e as Error).message, 'error');
+    } finally {
+      olBusy = false;
+    }
+  }
+
+  async function olAction(fn: () => Promise<Ollama>, message: string) {
+    olBusy = true;
+    try {
+      ollama = await fn();
+      settings.ollama_enabled = ollama.configured;
+      ol.token = '';
+      if (!ollama.configured) models = [];
+      notify(message);
+    } catch (e) {
+      notify((e as Error).message, 'error');
+    } finally {
+      olBusy = false;
+    }
+  }
 
   async function gmAction(fn: () => Promise<GrapeMinds>, message: string) {
     busy = true;
@@ -111,6 +152,61 @@
   <p class="muted hint">La clé est vérifiée avant d'être enregistrée (une requête). Offre gratuite : 250 requêtes par mois.</p>
 </div>
 
+<div class="card">
+  <h2>Ollama (recettes, facultatif)</h2>
+  <p class="muted hint top">
+    Branchez un serveur <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> pour que les membres puissent préremplir une
+    recette à partir d'une simple demande (« un gratin dauphinois pour 6 »). Rien n'est publié sans relecture. Le serveur doit être joignable
+    depuis Bouffe Center ; le jeton éventuel n'est jamais renvoyé ni sauvegardé.
+  </p>
+  {#if ollama?.configured}
+    <p class="status">
+      <span class="badge live">Connecté</span>
+      <span class="muted">{ollama.model} · {ollama.url}</span>
+    </p>
+    <div class="actions">
+      <button class="btn small" disabled={olBusy} onclick={() => olAction(() => api.post('/integrations/ollama/test'), 'Ollama répond, le modèle est disponible')}>Tester</button>
+      <button class="btn small danger" disabled={olBusy} onclick={() => confirm('Déconnecter Ollama ?') && olAction(() => api.del('/integrations/ollama'), 'Ollama déconnecté')}>
+        Déconnecter
+      </button>
+    </div>
+  {/if}
+  <form
+    class="ollama"
+    onsubmit={(e) => {
+      e.preventDefault();
+      olAction(() => api.put('/integrations/ollama', { url: ol.url, model: ol.model, token: ol.token || undefined }), 'Connexion Ollama enregistrée');
+    }}
+  >
+    <div class="field">
+      <label class="label" for="ollama-url">Adresse du serveur</label>
+      <div class="inline">
+        <input id="ollama-url" type="url" bind:value={ol.url} placeholder="http://192.168.1.10:11434" required />
+        <button type="button" class="btn" disabled={olBusy || !ol.url} onclick={loadModels}>Charger les modèles</button>
+      </div>
+    </div>
+    <label class="field">
+      <span>Modèle</span>
+      {#if models.length}
+        <select bind:value={ol.model} required>
+          {#each models as m (m.name)}<option value={m.name}>{m.name}{m.parameters ? ` · ${m.parameters}` : ''}{m.size ? ` · ${gb(m.size)}` : ''}</option>{/each}
+        </select>
+      {:else}
+        <input bind:value={ol.model} placeholder="Chargez la liste, ou saisissez ex. mistral-small3.2" required />
+      {/if}
+    </label>
+    <label class="field">
+      <span>Jeton (facultatif, si Ollama est derrière une authentification)</span>
+      <input type="password" bind:value={ol.token} autocomplete="off" placeholder={ollama?.has_token ? 'Jeton enregistré · laisser vide pour le garder' : 'Authorization: Bearer …'} />
+    </label>
+    <button class="btn primary" disabled={olBusy || !ol.url || !ol.model}>{olBusy ? 'Vérification…' : 'Enregistrer'}</button>
+  </form>
+  <p class="muted hint">
+    L'adresse et le modèle sont vérifiés avant l'enregistrement. Un modèle d'au moins 7–8 milliards de paramètres donne de bien meilleures
+    recettes en français ; sur un serveur sans carte graphique, comptez une à deux minutes par recette.
+  </p>
+</div>
+
 <Backup />
 
 <style>
@@ -152,5 +248,21 @@
   .key {
     display: flex;
     gap: 8px;
+  }
+  .ollama {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ollama .field {
+    width: 100%;
+  }
+  .inline {
+    display: flex;
+    gap: 8px;
+  }
+  .inline input {
+    flex: 1;
+    min-width: 0;
   }
 </style>

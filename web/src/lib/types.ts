@@ -82,6 +82,7 @@ export type Settings = {
   products_enabled: boolean;
   cellar_enabled: boolean;
   grapeminds_enabled: boolean;
+  ollama_enabled: boolean;
 };
 export type Section = 'map' | 'recipes' | 'planning' | 'products' | 'cellar';
 export type ProductKind = 'pantry' | 'wine';
