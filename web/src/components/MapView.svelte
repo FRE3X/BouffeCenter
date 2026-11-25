@@ -337,7 +337,9 @@
       onScreen = next;
     }
 
-    map.on('load', () => {
+    // Our places and clusters live in the style: add them again whenever the base style is (re)loaded.
+    function addPlaces() {
+      if (map!.getSource('places')) return;
       map!.addSource('places', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: visible },
@@ -365,6 +367,20 @@
         layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['Noto Sans Bold'], 'text-size': 13 },
         paint: { 'text-color': '#ffffff' },
       });
+    }
+    map.on('style.load', addPlaces);
+
+    // The base map comes from OpenFreeMap. MapLibre gives up after a single failed style or tile index request
+    // (flaky network, filtering DNS…), leaving a blank map: retry a few times with a growing delay.
+    let styleRetries = 0;
+    map.on('error', (e) => {
+      const message = String((e as { error?: Error }).error?.message ?? '');
+      if (!/tiles\.openfreemap\.org\/(planet|styles)/.test(message)) return;
+      if (styleRetries >= 4) return flash('Le fond de carte ne répond pas : rechargez la page dans un instant.');
+      setTimeout(() => map?.setStyle(mapStyle(), { diff: false }), 1500 * 2 ** styleRetries++);
+    });
+
+    map.on('load', () => {
       map!.on('click', 'clusters', async (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
