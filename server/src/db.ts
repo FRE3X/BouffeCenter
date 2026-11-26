@@ -289,6 +289,12 @@ const migrations: string[] = [
 
   CREATE TABLE secrets (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `,
+
+  // Categories are shared by places and recipes; applies_to narrows one to either. Venue types start as places only.
+  `
+  ALTER TABLE categories ADD COLUMN applies_to TEXT NOT NULL DEFAULT 'all' CHECK (applies_to IN ('all', 'places', 'recipes'));
+  UPDATE categories SET applies_to = 'places' WHERE slug IN ('restaurant', 'bistrot', 'street-food', 'cafe', 'bar');
+  `,
 ];
 
 export const SCHEMA_VERSION = migrations.length;

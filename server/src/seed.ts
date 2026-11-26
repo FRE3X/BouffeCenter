@@ -73,7 +73,9 @@ export async function seed(log = console.log) {
   for (const c of data.categories) {
     if (!q.get('SELECT 1 FROM categories WHERE slug = ?', [c.slug])) {
       const sort = q.get<{ s: number }>('SELECT coalesce(max(sort), 0) + 1 AS s FROM categories')!.s;
-      q.run('INSERT INTO categories (slug, name, icon, color, sort) VALUES (?, ?, ?, ?, ?)', [c.slug, c.name, c.icon, c.color, sort]);
+      // Venue types only make sense for places (see the applies_to migration).
+      const appliesTo = ['restaurant', 'bistrot', 'street-food', 'cafe', 'bar'].includes(c.slug) ? 'places' : 'all';
+      q.run('INSERT INTO categories (slug, name, icon, color, sort, applies_to) VALUES (?, ?, ?, ?, ?, ?)', [c.slug, c.name, c.icon, c.color, sort, appliesTo]);
       log(`[seed] category ${c.name}`);
     }
   }

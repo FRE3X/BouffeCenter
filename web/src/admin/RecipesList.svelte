@@ -28,7 +28,7 @@
   async function create() {
     creating = true;
     try {
-      const recipe = await api.post<RecipeCard>('/recipes', { title: 'Nouvelle recette' });
+      const recipe = await api.post<RecipeCard>('/recipes', { title: '' });
       navigate(`/recettes/${recipe.id}`);
     } catch (e) {
       notify((e as Error).message, 'error');
@@ -43,7 +43,7 @@
   <button class="btn primary" onclick={create} disabled={creating}>+ Nouvelle recette</button>
 </div>
 <div class="toolbar">
-  <input type="search" placeholder="Rechercher…" bind:value={q} oninput={onFilter} style="max-width:320px" />
+  <input type="search" placeholder="Rechercher…" aria-label="Rechercher une recette" bind:value={q} oninput={onFilter} style="max-width:320px" />
   <label class="switch"><input type="checkbox" bind:checked={mine} onchange={load} /> Mes recettes</label>
 </div>
 
@@ -55,7 +55,7 @@
       <a class="list-item" href={`#/recettes/${r.id}`}>
         {#if r.cover}<img class="thumb" src={r.cover.sm} alt="" loading="lazy" />{:else}<span class="thumb">{@html iconBadge(r.category?.icon ?? 'cooking-pot', 36)}</span>{/if}
         <span class="grow">
-          <strong>{r.title}</strong>
+          <strong>{r.title || 'Sans titre'}</strong>
           <small>{[r.category?.name, r.tags.map((t) => `#${t}`).join(' '), r.author && `par ${r.author}`].filter(Boolean).join(' · ')}</small>
         </span>
         <span class="badge" class:live={r.published}>{r.published ? 'Publiée' : 'Brouillon'}</span>

@@ -128,7 +128,7 @@ The website is just one client of the REST API under `/api`; a mobile app and an
 | POST | `/api/images` (multipart: `file`, `kind`, `owner_id`) | member |
 | PATCH / DELETE | `/api/images/:id`, POST `/api/images/reorder` | member |
 | GET | `/api/categories`, `/api/tags?kind=place\|recipe\|product\|wine` | public (tags¹) |
-| POST / PATCH / DELETE | `/api/categories[/:id]` | admin |
+| POST / PATCH / DELETE | `/api/categories[/:id]` `{ name, icon, color, sort, published, applies_to: all\|places\|recipes }` | admin |
 | GET | `/api/planning?week=YYYY-MM-DD` | public¹ |
 | GET | `/api/planning/shopping?week=YYYY-MM-DD` | member: out-of-stock products linked to the week's recipes |
 | PUT | `/api/planning/:date/:meal` `{ recipe_ids }` | member (`meal` = `breakfast` \| `lunch` \| `dinner`) |

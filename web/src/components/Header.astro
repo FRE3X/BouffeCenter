@@ -33,7 +33,7 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
 ---
 
 <!-- No bar: each control floats on its own over the map or the page. -->
-<header class="site-header">
+<header class:list={['site-header', { admin: mode === 'admin' }]}>
   <div class="left">
     {
       mode !== 'admin' && (
@@ -108,6 +108,10 @@ const initialQuery = Astro.url.searchParams.get('q') ?? '';
     gap: 10px;
     /* Let clicks and map drags pass through the empty space between controls. */
     pointer-events: none;
+  }
+  /* Back-office: the header scrolls away with the page instead of floating over forms and tabs. */
+  .site-header.admin {
+    position: absolute;
   }
   .site-header > * > *,
   .toggle {

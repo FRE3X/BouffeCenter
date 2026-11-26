@@ -68,7 +68,7 @@
         <li id="{id}-{i}" role="option" aria-selected={i === active}>
           <button type="button" tabindex="-1" class:active={i === active} onmousedown={(e) => e.preventDefault()} onclick={() => onpick(r)} onmouseenter={() => (active = i)}>
             {#if r.cover}<img src={r.cover.sm} alt="" loading="lazy" />{:else}<span class="ph">{@html iconBadge(r.category?.icon ?? 'cooking-pot', 28)}</span>{/if}
-            <span>{r.title}{#if !r.published}<small> · brouillon</small>{/if}</span>
+            <span>{r.title || 'Sans titre'}{#if !r.published}<small> · brouillon</small>{/if}</span>
           </button>
         </li>
       {/each}

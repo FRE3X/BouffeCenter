@@ -108,7 +108,7 @@ export async function generateRecipeDraft(prompt: string): Promise<RecipeDraft> 
   if (busy) fail(429, 'Une recette est déjà en cours de génération, réessayez dans un instant');
 
   // Reuse the site's own vocabulary so the draft fits in.
-  const categories = q.all<{ id: number; name: string }>('SELECT id, name FROM categories ORDER BY sort, name');
+  const categories = q.all<{ id: number; name: string }>("SELECT id, name FROM categories WHERE applies_to != 'places' ORDER BY sort, name");
   const knownTags = q
     .all<{ value: string }>(
       'SELECT value FROM recipes, json_each(recipes.tags) GROUP BY value ORDER BY count(*) DESC, value LIMIT 40',

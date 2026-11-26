@@ -94,7 +94,8 @@ const listQuery = z.object({
 });
 
 const recipeInput = z.object({
-  title: z.string().trim().min(1).max(160),
+  // Empty while a new recipe is being written; required to publish.
+  title: z.string().trim().max(160),
   description: z.string().max(1000).optional(),
   category_id: z.number().int().nullable().optional(),
   place_id: z.number().int().nullable().optional(),
@@ -192,6 +193,7 @@ export const recipes = new Hono<AuthEnv>()
   .post('/', validate('json', recipeInput), (c) => {
     const user = requireUser(c);
     const body = c.req.valid('json');
+    if (body.published && !body.title) fail(400, 'Donnez un titre à la recette avant de la publier');
     const data = {
       title: body.title,
       description: body.description ?? '',
@@ -203,7 +205,7 @@ export const recipes = new Hono<AuthEnv>()
       `INSERT INTO recipes (slug, title, description, category_id, place_id, tags, ingredients, body, published, search, author_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        uniqueSlug('recipes', body.title),
+        uniqueSlug('recipes', body.title || 'Nouvelle recette'),
         body.title,
         data.description,
         data.category_id,
@@ -236,7 +238,8 @@ export const recipes = new Hono<AuthEnv>()
       cover_image_id: body.cover_image_id === undefined ? current.cover_image_id : body.cover_image_id,
       published: body.published === undefined ? Boolean(current.published) : body.published,
     };
-    const slug = current.slug.startsWith('nouvelle-recette') && next.title !== 'Nouvelle recette'
+    if (next.published && !next.title) fail(400, 'Donnez un titre à la recette avant de la publier');
+    const slug = current.slug.startsWith('nouvelle-recette') && next.title && next.title !== 'Nouvelle recette'
       ? uniqueSlug('recipes', next.title, current.id)
       : current.slug;
     q.run(

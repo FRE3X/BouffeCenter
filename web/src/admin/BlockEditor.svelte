@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Editor } from '@tiptap/core';
+  import { TextSelection } from '@tiptap/pm/state';
   import StarterKit from '@tiptap/starter-kit';
   import Image from '@tiptap/extension-image';
   import { Placeholder } from '@tiptap/extensions';
@@ -10,11 +11,18 @@
   import { api, notify } from './client.svelte';
   import { prepareImage } from './resize';
   import { SlashCommand, slashItems } from './slash';
+  import { icon } from '../lib/icons';
 
   let {
     value = $bindable(''),
     ownerId,
-  }: { value: string; ownerId: number } = $props();
+    startWithSteps = false,
+  }: {
+    value: string;
+    ownerId: number;
+    /** An empty recipe starts as a numbered list: step 1 is ready, no need to know the "/" menu. */
+    startWithSteps?: boolean;
+  } = $props();
 
   let element: HTMLDivElement;
   let handle: HTMLDivElement;
@@ -43,7 +51,14 @@
         Image,
         Markdown,
         Placeholder.configure({
-          placeholder: ({ node }) => (node.type.name === 'heading' ? 'Titre' : 'Tape « / » pour insérer un bloc…'),
+          includeChildren: true,
+          // Only the current line shows a placeholder, so the selection tells where it is.
+          placeholder: ({ editor, node }) => {
+            if (node.type.name === 'heading') return 'Titre';
+            if (editor.isActive('blockquote')) return 'Une astuce, une variante…';
+            if (editor.isActive('listItem')) return 'Décrivez l\'étape… (Entrée pour la suivante)';
+            return 'Écrivez ici, ou tapez « / » pour plus de blocs';
+          },
         }),
         DragHandle.configure({ render: () => handle }),
         BubbleMenu.configure({ element: bubble, shouldShow: ({ editor, from, to }) => from !== to && !editor.isActive('image') }),
@@ -52,7 +67,15 @@
       content: value,
       contentType: 'markdown',
       editorProps: {
-        attributes: { class: 'prose block-editor' },
+        attributes: { class: 'prose block-editor', role: 'textbox', 'aria-multiline': 'true', 'aria-label': 'Préparation' },
+        // Until something is written, a tap anywhere in an empty "steps" editor lands in step 1,
+        // not in the empty line after the list.
+        handleClick: (view, pos) => {
+          const first = view.state.doc.firstChild;
+          if (!startWithSteps || view.state.doc.textContent.trim() || first?.type.name !== 'orderedList' || pos < first.nodeSize) return false;
+          editor?.commands.setTextSelection(3);
+          return true;
+        },
         handlePaste: (_view, event) => {
           const files = [...(event.clipboardData?.files ?? [])];
           if (!files.some((f) => f.type.startsWith('image/'))) return false;
@@ -73,6 +96,12 @@
       },
       onTransaction: () => tick++,
     });
+    if (startWithSteps && !value.trim()) {
+      editor.commands.setContent(
+        { type: 'doc', content: [{ type: 'orderedList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }] }] }] },
+        { emitUpdate: false },
+      );
+    }
     return () => editor?.destroy();
   });
 
@@ -85,18 +114,72 @@
   }
 
   const active = (name: string, attrs?: Record<string, unknown>) => (tick, editor?.isActive(name, attrs) ?? false);
+
+  /**
+   * Block buttons: on an empty line they turn it into that block; on a line with text they add a new one after it,
+   * so a tip or a heading never swallows what was just written.
+   */
+  function insertBlock(kind: 'step' | 'heading' | 'tip') {
+    const ed = editor;
+    if (!ed) return;
+    const from = ed.state.selection.$from;
+    const empty = from.parent.textContent.length === 0;
+    if (kind === 'step') {
+      if (ed.isActive('orderedList') && !empty) {
+        ed.chain().focus().setTextSelection(from.end()).splitListItem('listItem').run();
+      } else if (empty || ed.isActive('orderedList')) {
+        ed.chain().focus().toggleOrderedList().run();
+      } else {
+        const pos = from.after(1);
+        ed.chain()
+          .focus()
+          .command(({ tr, state }) => {
+            tr.insert(pos, state.schema.nodes.paragraph.create());
+            tr.setSelection(TextSelection.create(tr.doc, pos + 1));
+            return true;
+          })
+          .toggleOrderedList()
+          .run();
+      }
+      return;
+    }
+    if (empty) {
+      if (kind === 'heading') ed.chain().focus().toggleHeading({ level: 2 }).run();
+      else ed.chain().focus().toggleBlockquote().run();
+      return;
+    }
+    // New empty line after the current top-level block (a whole list counts as one), then turn it into the block.
+    const pos = from.after(1);
+    ed.chain()
+      .focus()
+      .command(({ tr, state }) => {
+        tr.insert(pos, state.schema.nodes.paragraph.create());
+        tr.setSelection(TextSelection.create(tr.doc, pos + 1));
+        return true;
+      })
+      .run();
+    if (kind === 'heading') ed.chain().focus().setHeading({ level: 2 }).run();
+    else ed.chain().focus().toggleBlockquote().run();
+  }
 </script>
 
 <div class="editor-shell">
+  <!-- The usual blocks in one tap: the "/" menu stays for those who know it. -->
+  <div class="blocks" role="toolbar" aria-label="Insérer dans la préparation">
+    <button type="button" onclick={() => insertBlock('step')}>{@html icon('list-ordered', 18)}<span>Étape</span></button>
+    <button type="button" onclick={() => insertBlock('heading')}>{@html icon('heading', 18)}<span>Titre</span></button>
+    <button type="button" onclick={() => fileInput.click()}>{@html icon('image', 18)}<span>Photo</span></button>
+    <button type="button" onclick={() => insertBlock('tip')}>{@html icon('lightbulb', 18)}<span>Astuce</span></button>
+  </div>
   <div bind:this={element}></div>
 
   <div class="drag-handle" bind:this={handle} title="Glisser pour déplacer le bloc">⋮⋮</div>
 
   <div class="bubble" bind:this={bubble}>
-    <button type="button" class:on={active('bold')} onclick={() => editor?.chain().focus().toggleBold().run()}><b>G</b></button>
-    <button type="button" class:on={active('italic')} onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
-    <button type="button" class:on={active('strike')} onclick={() => editor?.chain().focus().toggleStrike().run()}><s>S</s></button>
-    <button type="button" class:on={active('heading', { level: 2 })} onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+    <button type="button" class:on={active('bold')} aria-label="Gras" onclick={() => editor?.chain().focus().toggleBold().run()}><b>G</b></button>
+    <button type="button" class:on={active('italic')} aria-label="Italique" onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
+    <button type="button" class:on={active('strike')} aria-label="Barré" onclick={() => editor?.chain().focus().toggleStrike().run()}><s>S</s></button>
+    <button type="button" class:on={active('heading', { level: 2 })} aria-label="Titre" onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
     <button type="button" class:on={active('link')} onclick={setLink}>Lien</button>
   </div>
 
@@ -106,6 +189,54 @@
 <style>
   .editor-shell {
     position: relative;
+  }
+  /* Stays in view while writing a long preparation. */
+  .blocks {
+    position: sticky;
+    top: var(--editor-toolbar-top, 0px);
+    z-index: 6;
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .blocks::-webkit-scrollbar {
+    display: none;
+  }
+  .blocks button {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px 0 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .blocks button :global(svg) {
+    color: var(--accent);
+  }
+  .blocks button:active {
+    background: var(--surface-2);
+  }
+  /* Drag to reorder needs a mouse: hidden on touch screens. */
+  @media (pointer: coarse) {
+    /* The drag-handle plugin sets inline styles on it. */
+    .drag-handle {
+      display: none !important;
+    }
+    .editor-shell :global(.block-editor) {
+      padding-left: 12px;
+    }
   }
   .editor-shell :global(.block-editor) {
     min-height: 320px;
@@ -164,8 +295,8 @@
     box-shadow: var(--shadow);
   }
   .bubble button {
-    min-width: 30px;
-    height: 30px;
+    min-width: 36px;
+    height: 36px;
     border: 0;
     border-radius: 7px;
     background: transparent;

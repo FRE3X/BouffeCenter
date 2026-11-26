@@ -1,4 +1,14 @@
-export type Category = { id: number; slug: string; name: string; icon: string; color: string; sort?: number; published?: boolean };
+/** applies_to: offered for places, recipes, or both ('all'). */
+export type Category = {
+  id: number;
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+  sort?: number;
+  published?: boolean;
+  applies_to?: 'all' | 'places' | 'recipes';
+};
 export type ImageUrls = { sm: string; lg: string };
 export type Photo = {
   id: string;

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { icon } from '../lib/icons';
 
   let { tags = $bindable([]), kind }: { tags: string[]; kind: 'place' | 'recipe' | 'product' | 'wine' } = $props();
   let draft = $state('');
@@ -29,9 +30,18 @@
 
 <div class="tags-input">
   {#each tags as tag (tag)}
-    <span class="tag">#{tag}<button type="button" aria-label={`Retirer ${tag}`} onclick={() => (tags = tags.filter((t) => t !== tag))}>×</button></span>
+    <span class="tag">#{tag}<button type="button" aria-label={`Retirer le tag ${tag}`} onclick={() => (tags = tags.filter((t) => t !== tag))}>{@html icon('x', 14, 2.5)}</button></span>
   {/each}
-  <input list={listId} bind:value={draft} {onkeydown} onblur={add} placeholder={tags.length ? '' : 'végé, terrasse… (Entrée pour ajouter)'} />
+  <input
+    list={listId}
+    bind:value={draft}
+    {onkeydown}
+    onblur={add}
+    aria-label="Ajouter un tag"
+    enterkeyhint="done"
+    autocapitalize="none"
+    placeholder={tags.length ? 'Autre tag…' : 'végé, rapide… (virgule ou Entrée)'}
+  />
   <datalist id={listId}>
     {#each suggestions.filter((s) => !tags.includes(s)) as s}<option value={s}></option>{/each}
   </datalist>
@@ -59,10 +69,30 @@
     background: transparent !important;
   }
   .tag button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin: 0 -4px 0 2px;
     border: 0;
+    border-radius: 50%;
     background: none;
     cursor: pointer;
-    padding: 0 0 0 4px;
+    padding: 0;
     color: inherit;
+  }
+  .tag button:hover {
+    background: color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  /* 44px touch target around the small ✕. */
+  .tag button::after {
+    content: '';
+    position: absolute;
+    inset: -11px;
+  }
+  .tags-input input::placeholder {
+    color: var(--muted);
+    opacity: 1;
   }
 </style>

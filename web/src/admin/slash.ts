@@ -20,8 +20,6 @@ export function slashItems(onImage: () => void): SlashItem[] {
     { title: 'Liste à puces', hint: 'Liste simple', icon: '•', keywords: 'liste puces bullet', run: (e, r) => e.chain().focus().deleteRange(r).toggleBulletList().run() },
     { title: 'Image', hint: 'Importer une photo', icon: '▣', keywords: 'image photo upload', run: (e, r) => (e.chain().focus().deleteRange(r).run(), onImage()) },
     { title: 'Astuce', hint: 'Citation / encadré', icon: '❝', keywords: 'astuce citation quote conseil note', run: (e, r) => e.chain().focus().deleteRange(r).toggleBlockquote().run() },
-    { title: 'Séparateur', hint: 'Ligne horizontale', icon: '—', keywords: 'separateur ligne divider hr', run: (e, r) => e.chain().focus().deleteRange(r).setHorizontalRule().run() },
-    { title: 'Code', hint: 'Bloc de code', icon: '</>', keywords: 'code', run: (e, r) => e.chain().focus().deleteRange(r).toggleCodeBlock().run() },
   ];
 }
 

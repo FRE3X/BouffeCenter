@@ -227,7 +227,7 @@
             <span>Catégorie</span>
             <select bind:value={form.category_id}>
               <option value={null}>—</option>
-              {#each categories as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
+              {#each categories.filter((c) => c.applies_to !== 'recipes' || c.id === form.category_id) as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
             </select>
           </label>
           <div class="field">

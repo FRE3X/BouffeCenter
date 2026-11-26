@@ -67,12 +67,17 @@
     if (e.dataTransfer?.files) upload(e.dataTransfer.files);
   }}
 >
+  <!-- Phones: straight to the camera, or pick from the library. -->
+  <label class="btn camera-only">
+    {@html icon('camera', 16)} Prendre une photo
+    <input type="file" accept="image/*" capture="environment" hidden onchange={(e) => upload(e.currentTarget.files ?? [])} />
+  </label>
   <label class="btn">
-    {@html icon('camera', 16)} Ajouter des photos
+    {@html icon('image', 16)} Ajouter des photos
     <input type="file" accept="image/*" multiple hidden onchange={(e) => upload(e.currentTarget.files ?? [])} />
   </label>
-  <span class="muted">ou glisse-les ici · créditées à <strong>{user.pseudo}</strong></span>
-  {#if uploading}<span class="muted">⏳ {uploading} en cours…</span>{/if}
+  <span class="muted"><span class="drag-only">ou glisse-les ici&nbsp;·&nbsp;</span>créditées à <strong>{user.pseudo}</strong></span>
+  {#if uploading}<span class="muted" role="status">{uploading} en cours d'envoi…</span>{/if}
 </div>
 
 {#if photos.length}
@@ -88,14 +93,20 @@
             <small>{photo.alt}</small>
           {/if}
           <div class="actions">
-            <button type="button" class="btn small" disabled={i === 0} onclick={() => move(i, -1)} aria-label="Avancer">←</button>
-            <button type="button" class="btn small" disabled={i === photos.length - 1} onclick={() => move(i, 1)} aria-label="Reculer">→</button>
+            <button type="button" class="icon-btn" disabled={i === 0} onclick={() => move(i, -1)} aria-label="Avancer la photo">{@html icon('arrow-left', 18)}</button>
+            <button type="button" class="icon-btn" disabled={i === photos.length - 1} onclick={() => move(i, 1)} aria-label="Reculer la photo">{@html icon('arrow-right', 18)}</button>
             {#if coverId !== undefined}
-              <button type="button" class="btn small" onclick={() => (coverId = coverId === photo.id ? null : photo.id)}>
-                {coverId === photo.id ? '★ Couverture' : '☆'}
-              </button>
+              <button
+                type="button"
+                class="icon-btn"
+                class:on={coverId === photo.id}
+                aria-pressed={coverId === photo.id}
+                aria-label="Photo de couverture"
+                title="Photo de couverture"
+                onclick={() => (coverId = coverId === photo.id ? null : photo.id)}
+              >{@html icon('star', 18)}</button>
             {/if}
-            {#if canEdit(photo)}<button type="button" class="btn small danger" onclick={() => remove(photo)}>Suppr.</button>{/if}
+            {#if canEdit(photo)}<button type="button" class="icon-btn danger" aria-label="Supprimer la photo" onclick={() => remove(photo)}>{@html icon('trash', 18)}</button>{/if}
           </div>
         </div>
       </li>
@@ -156,7 +167,42 @@
     flex-wrap: wrap;
     gap: 4px;
   }
-  .actions .btn {
-    padding: 3px 9px;
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .icon-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .icon-btn.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .icon-btn.on :global(svg) {
+    fill: currentColor;
+  }
+  .icon-btn.danger {
+    color: var(--meh);
+  }
+  .camera-only {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .camera-only {
+      display: inline-flex;
+    }
+    .drag-only {
+      display: none;
+    }
   }
 </style>

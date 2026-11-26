@@ -128,7 +128,7 @@
   }
 
   // Every published category appears in the rail, even before it has places.
-  const usedCategories = $derived(categories.filter((c) => c.published !== false));
+  const usedCategories = $derived(categories.filter((c) => c.published !== false && c.applies_to !== 'recipes'));
   const results = $derived(query.trim() ? visible.slice(0, 8) : []);
   const resultCount = $derived(results.length + relatedRecipes.length + relatedProducts.length);
 

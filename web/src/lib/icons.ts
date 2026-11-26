@@ -3,7 +3,7 @@ import {
   Coffee, Cookie, CookingPot, Croissant, CupSoda, Dessert, Donut, Drumstick, EggFried, Fish, Flame, Grape, Ham,
   Hamburger, IceCreamCone, Image, LayoutGrid, Leaf, List, Lock, Map as MapIcon, MapPin, Martini, Milk, Minus, Package, Pizza, Plus, Popcorn, Salad,
   Sandwich, ScanBarcode, Search, Settings, ShoppingBasket, ShoppingCart, Soup, Sprout, Store, Tag, User, Users, Utensils, Vegan,
-  Wheat, Wine, X,
+  Wheat, Wine, X, Ellipsis, Maximize2, Minimize2, ListOrdered, Heading2, Lightbulb, ArrowUp, ArrowDown, Trash2, Star, ArrowLeft, ArrowRight,
 } from 'lucide';
 
 type IconNode = [string, Record<string, string | number>][];
@@ -80,6 +80,18 @@ const UI_ICONS = {
   calendar: CalendarDays,
   'shopping-basket': ShoppingBasket,
   'chevron-left': ChevronLeft,
+  more: Ellipsis,
+  maximize: Maximize2,
+  minimize: Minimize2,
+  'list-ordered': ListOrdered,
+  heading: Heading2,
+  lightbulb: Lightbulb,
+  'arrow-up': ArrowUp,
+  'arrow-down': ArrowDown,
+  'arrow-left': ArrowLeft,
+  'arrow-right': ArrowRight,
+  trash: Trash2,
+  star: Star,
   'chevron-right': ChevronRight,
 } satisfies Record<string, IconNode>;
 

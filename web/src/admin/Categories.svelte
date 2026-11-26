@@ -28,7 +28,7 @@
 
   async function update(row: Row) {
     try {
-      await api.patch(`/categories/${row.id}`, { name: row.name, icon: row.icon, color: row.color, sort: row.sort, published: row.published });
+      await api.patch(`/categories/${row.id}`, { name: row.name, icon: row.icon, color: row.color, sort: row.sort, published: row.published, applies_to: row.applies_to });
       notify('Catégorie mise à jour');
     } catch (err) {
       notify((err as Error).message, 'error');
@@ -43,7 +43,10 @@
 </script>
 
 <h1>Catégories</h1>
-<p class="muted">Partagées entre les adresses et les recettes. Les catégories publiées apparaissent dans la barre d'icônes à droite de la carte.</p>
+<p class="muted">
+  Chaque catégorie sert aux adresses, aux recettes, ou aux deux. Celles des adresses qui sont publiées apparaissent dans la barre d'icônes à
+  droite de la carte ; seules celles des recettes sont proposées dans l'éditeur de recette.
+</p>
 
 <div class="cats">
   {#each rows as row (row.id)}
@@ -52,6 +55,11 @@
         <IconPicker bind:value={row.icon} onchange={() => update(row)} />
         <input class="name" bind:value={row.name} onchange={() => update(row)} aria-label="Nom de la catégorie" />
         <small class="muted">{row.places} adr. · {row.recipes} rec.</small>
+        <select class="scope" bind:value={row.applies_to} onchange={() => update(row)} aria-label="Utilisée pour">
+          <option value="all">Adresses et recettes</option>
+          <option value="places">Adresses</option>
+          <option value="recipes">Recettes</option>
+        </select>
         <label class="switch"><input type="checkbox" bind:checked={row.published} onchange={() => update(row)} /> Publiée</label>
         <button class="btn small danger" onclick={() => remove(row)}>Supprimer</button>
       </div>
@@ -94,6 +102,9 @@
   }
   .add {
     border-style: dashed;
+  }
+  .scope {
+    width: auto !important;
   }
   .unpublished {
     opacity: 0.6;
